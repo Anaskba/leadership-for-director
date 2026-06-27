@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leadership for Directors — Study Hub</title>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1a2230; --muted:#5d6b80; --line:#e4e8ef;
+  --brand:#1f4e8c; --brand2:#2f72c4; --accent:#0f7a5a; --warn:#b25b00; --bad:#b3261e;
+  --chip:#eef3fb; --good-bg:#e7f5ee; --bad-bg:#fdecea; --shadow:0 1px 3px rgba(20,30,50,.08),0 8px 24px rgba(20,30,50,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:18px 16px 60px}
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{font-size:21px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.overall{min-width:200px}
+.bar{height:9px;background:#e9edf3;border-radius:6px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand2),var(--accent));width:0;transition:width .4s}
+.tabs{display:flex;gap:6px;margin:18px 0 16px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:5}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--muted);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:13px}
+.tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px;margin-bottom:14px}
+.modtitle{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;margin:0}
+.mnum{background:var(--chip);color:var(--brand);border-radius:8px;padding:3px 9px;font-size:13px;font-weight:700}
+.lo{color:var(--muted);font-size:13px;margin:8px 0 0}
+.miniprog{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.section-list{list-style:none;margin:12px 0 0;padding:0;columns:2;column-gap:24px}
+@media(max-width:640px){.section-list{columns:1}}
+.section-list li{break-inside:avoid;display:flex;gap:8px;align-items:flex-start;padding:4px 0;font-size:13.5px}
+.section-list input{margin-top:3px;flex:0 0 auto;width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.section-list label{cursor:pointer}
+.section-list .done label{color:var(--muted);text-decoration:line-through}
+details.notes{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+details.notes summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--brand)}
+textarea{width:100%;min-height:80px;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:vertical;background:#fcfdff}
+.saved{font-size:12px;color:var(--accent);margin-left:8px;opacity:0;transition:opacity .3s}
+.summary{font-size:14px;color:#33414f;margin:10px 0 0}
+.acs{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}
+.acs li{margin:2px 0}
+/* Flashcards */
+.fc-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font:inherit;font-weight:600;cursor:pointer;color:var(--ink)}
+.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.5;cursor:default}
+.flash{perspective:1200px;margin:0 auto;max-width:560px}
+.flash-inner{position:relative;min-height:230px;transition:transform .5s;transform-style:preserve-3d;cursor:pointer}
+.flash.flip .flash-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:26px;display:flex;flex-direction:column;justify-content:center;text-align:center;background:var(--card)}
+.face .tag{position:absolute;top:12px;left:14px;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.face.front .term{font-size:21px;font-weight:700}
+.face.front .hint{color:var(--muted);font-size:12px;margin-top:14px}
+.face.back{transform:rotateY(180deg);background:#fbfdff}
+.face.back .def{font-size:15px;line-height:1.5}
+.fc-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;max-width:560px;margin-left:auto;margin-right:auto}
+.fc-count{color:var(--muted);font-size:13px}
+.fc-known{display:flex;gap:8px}
+.fclist-item{border-top:1px solid var(--line);padding:12px 2px}
+.fclist-item:first-child{border-top:none}
+.fclist-item h4{margin:0 0 4px;font-size:15px;color:var(--brand)}
+.fclist-item h4 .tagm{font-weight:400;font-size:11.5px;color:var(--muted)}
+.fclist-item p{margin:0;font-size:14px;color:#33414f;line-height:1.5}
+.fclist-head{font-size:16px;font-weight:700;margin:0 0 4px}
+/* Quiz */
+.q{margin-bottom:14px}
+.qtext{font-weight:600;margin:0 0 10px}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;background:var(--card);text-align:left;font:inherit}
+.choice:hover{border-color:var(--brand2)}
+.choice.sel{border-color:var(--brand);background:var(--chip)}
+.choice.correct{border-color:var(--accent);background:var(--good-bg)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.explain{font-size:13px;color:#33414f;margin:8px 0 0;padding:8px 10px;background:#f4f7fb;border-radius:8px;display:none}
+.explain.show{display:block}
+.quiz-result{font-size:16px;font-weight:700;margin:0 0 6px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #cdd6e3;border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.note{font-size:12px;color:var(--muted)}
+.hidden{display:none!important}
+.kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.kpi .box{flex:1;min-width:130px;background:var(--chip);border-radius:12px;padding:12px 14px}
+.kpi .box b{display:block;font-size:22px;color:var(--brand)}
+.kpi .box span{font-size:12px;color:var(--muted)}
+.reset{font-size:12px;color:var(--bad);background:none;border:none;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Leadership for Directors</h1>
+      <p class="sub">Board Director Readiness Programme · IoD Module Study Hub · v26.1</p>
+    </div>
+    <div class="overall">
+      <div class="bar"><i id="overallBar"></i></div>
+      <p class="sub" style="margin-top:6px"><span id="overallPct">0%</span> studied · <span id="overallCount">0/0</span> subsections</p>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="progress">Overview</button>
+    <button class="tab" data-tab="plan">Study Plan</button>
+    <button class="tab" data-tab="sections">Sections &amp; Notes</button>
+    <button class="tab" data-tab="flash">Flashcards</button>
+    <button class="tab" data-tab="quiz">Quiz</button>
+  </nav>
+
+  <section id="tab-progress"></section>
+  <section id="tab-plan" class="hidden"></section>
+  <section id="tab-sections" class="hidden"></section>
+
+  <section id="tab-flash" class="hidden">
+    <div class="card">
+      <div class="fc-toolbar">
+        <label class="note">Deck:</label>
+        <select id="fcModule"><option value="all">All modules</option></select>
+        <span class="fc-count" id="fcProgress"></span>
+        <button class="btn ghost" id="fcListBtn" style="margin-left:auto">📄 List all</button>
+        <button class="btn ghost" id="fcShuffle">Shuffle</button>
+        <button class="btn ghost" id="fcReview">Review unknown only</button>
+      </div>
+      <div id="fcList" class="hidden"></div>
+      <div class="flash" id="flash">
+        <div class="flash-inner">
+          <div class="face front"><div class="tag" id="fcTag"></div><div class="term" id="fcFront"></div><div class="hint">click to flip</div></div>
+          <div class="face back"><div class="tag">Definition</div><div class="def" id="fcBack"></div></div>
+        </div>
+      </div>
+      <div class="fc-nav">
+        <button class="btn" id="fcPrev">‹ Prev</button>
+        <div class="fc-known">
+          <button class="btn ghost" id="fcNotYet">Still learning</button>
+          <button class="btn primary" id="fcGotIt">Got it ✓</button>
+        </div>
+        <button class="btn" id="fcNext">Next ›</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-quiz" class="hidden">
+    <div class="card">
+      <div class="fc-toolbar">
+        <label class="note">Week:</label>
+        <select id="qzModule"><option value="all">All weeks (mixed)</option></select>
+        <button class="btn primary" id="qzStart" style="margin-left:auto">Start quiz</button>
+        <button class="btn ghost" id="qzAI" title="Generate fresh questions with Claude">✨ New AI questions</button>
+      </div>
+      <p class="note" id="qzHint">Pick a week and start. Each quiz pulls up to 6 questions; your best score per week is saved.</p>
+      <div id="qzArea"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ============ CONTENT (authored from the LFD handbook, v26.1) ============ */
+const MODULES = [
+{
+  num:1, title:"What is leadership?",
+  lo:"Understand the concepts of leadership and followership and define leadership in relation to the director's role on the board (LO1).",
+  acs:["AC1.1 Contrast definitions of leadership; distinguish leadership from management.",
+       "AC1.2 Analyse the leader's role re: vision, purpose, values and strategy.",
+       "AC1.3 Describe characteristics of successful leaders; assess different leadership styles.",
+       "AC1.4 Explain key theories and models of leadership.",
+       "AC1.5 Examine followership and the leader–follower relationship."],
+  summary:"Leadership has no single definition but generally involves influencing individuals or groups toward a common goal — and crucially requires followers (a title confers status, not authority). The module contrasts leadership (innovation, change, direction) with management (stability, efficiency), traces the progression of leadership theories and organisational structures, surveys leadership approaches and styles, and establishes followership as a reciprocal process in which followers choose whom to follow.",
+  subs:["1.1 Defining leadership","1.2 Vision, purpose and values","1.2.1 Vision","1.2.2 Purpose","1.2.3 How vision and purpose create motive force","1.2.4 Values","1.3 Examples of leadership","1.3.1 The IoD Director Competency Framework","1.3.2 Leading at all levels","1.4 Theories and models of leadership","1.4.1 Progression of leadership theories","1.4.2 Progression of organisation structures and design","1.4.3 Leadership approaches","1.4.4 Adapting leadership styles","1.4.5 Smart ideas, smart organisations","1.4.6 International leadership","1.5 Followership","1.5.1 What do followers need?","1.5.2 What should followers provide?","1.5.3 Leaders, followers and trust","1.5.4 Defining followers","1.5.5 The directors' role in followership","1.6 What does this mean for me?"],
+  flash:[
+    {t:"Leadership (working definition)",d:"An individual or group influencing another individual or group to move toward a common goal. Leaders inevitably need followers — a title conveys status but does not guarantee authority or create followers."},
+    {t:"Leadership vs management (Yukl)",d:"Managers are oriented toward stability and efficiency (getting people to do things more efficiently); leaders are oriented toward innovation and change (taking people in new directions). Both are essential."},
+    {t:"Peter Drucker on leadership",d:"“The only definition of a leader is someone who has followers.” Emphasises that followership is the defining test of leadership."},
+    {t:"Warren Bennis on leadership",d:"“Leadership is the capacity to translate vision into reality.”"},
+    {t:"Vision",d:"A clear and compelling view of what the future of the organisation could look like — the destination that inspires and aligns effort."},
+    {t:"Purpose",d:"The reason why an organisation exists. Together with vision it creates 'motive force' — the motivation that drives people to act."},
+    {t:"Values",d:"The principles that indicate how people should behave while delivering the vision and purpose; the behavioural backbone of culture."},
+    {t:"Followership",d:"A reciprocal process: followers actively or passively decide whom they will follow. Leaders cannot lead unless followers follow (Kellerman)."},
+    {t:"Charismatic leadership (caution)",d:"Charismatic leaders inspire through vision and energy and can have major impact, but a charisma-led view risks treating leadership as an unteachable mystery and over-relying on one personality."},
+    {t:"Leading at all levels",d:"Directors must enable others to lead when appropriate — ensuring everyone has the ability, confidence and motivation to contribute their best thinking, not just those with formal titles."},
+    {t:"Trust (in leadership)",d:"The foundation of the leader–follower relationship; without trust, influence and willing followership break down."}
+  ],
+  quiz:[
+    {q:"According to the handbook, what is the one element every definition of leadership ultimately requires?",c:["A formal job title","Followers","Charisma","A strategic plan"],a:1,e:"Drucker: 'The only definition of a leader is someone who has followers.' A title conveys status but does not create followers."},
+    {q:"Per Yukl, how do leaders and managers primarily differ in orientation?",c:["Leaders favour stability; managers favour innovation","Leaders favour innovation; managers favour stability/efficiency","They are identical in practice","Managers need followers; leaders do not"],a:1,e:"Managers are oriented toward stability and efficiency; leaders are oriented toward innovation and change. Both remain essential."},
+    {q:"What does the handbook mean by an organisation's 'purpose'?",c:["The future state it aspires to","The reason why the organisation exists","Its annual financial targets","Its code of conduct"],a:1,e:"Purpose = why the organisation exists; vision = the compelling future view. Together they create motive force."},
+    {q:"Which best describes 'followership' as presented in the module?",c:["Passive obedience to authority","A reciprocal process in which followers choose whom to follow","A management technique for delegation","Something only relevant to junior staff"],a:1,e:"Followership is reciprocal — followers decide, actively or passively, whom they will follow (Kellerman)."},
+    {q:"Bennis defined leadership as the capacity to do what?",c:["Maximise shareholder value","Translate vision into reality","Control risk","Maintain operational stability"],a:1,e:"Warren Bennis: 'Leadership is the capacity to translate vision into reality.'"},
+    {q:"What is a risk of an exclusively charisma-led view of leadership?",c:["It overstates the role of process","It treats leadership as an unteachable mystery reliant on one personality","It ignores vision entirely","It eliminates the need for followers"],a:1,e:"A charisma-led view can treat leadership as a mystery and over-rely on a single charismatic figure, downplaying learnable practice."},
+    {q:"Why does the handbook stress 'leading at all levels'?",c:["To reduce the board's accountability","Because directors should enable others to lead so the whole organisation contributes its best thinking","Because titles are the main source of authority","To centralise decisions on the chair"],a:1,e:"Directors should bring out the best in others and enable them to lead when appropriate, not reserve leadership to title-holders."}
+  ]
+},
+{
+  num:2, title:"Understanding yourself and others",
+  lo:"Develop greater self-awareness and awareness of others' motivations and behaviours, and how this contributes to inspirational leadership (LO2).",
+  acs:["AC2.1 Apply understanding of people's different psychologies to collective decision making.",
+       "AC2.2 Describe the value of self/other awareness to effective leadership.",
+       "AC2.3 Compare approaches to building self-awareness (assessment tools, coaching).",
+       "AC2.4 Identify the negative side of emotional intelligence and toxic leadership.",
+       "AC2.5 Describe approaches to identify and develop leadership talent.",
+       "AC2.6 Identify key interpersonal skills required in leadership.",
+       "AC2.7 Apply theories of motivation and attribution to future action."],
+  summary:"The hardest boardroom challenges are usually human, not technical. This module grounds leadership in neuroscience and psychology — the brain as a 'survival machine' running unconscious heuristics and the fight-or-flight stress response — then builds out emotional intelligence (self-awareness, self-management, social awareness, social skills) and its dark side. It covers toxic leadership and remedies, decision-making under bounded rationality and bias (fast vs slow thinking, stress), personal brand, developing and retaining talent, defining potential, and theories of motivation.",
+  subs:["2.1 Introduction","2.2 Neuroscience and psychology in leadership","2.2.1 Ambiguity tolerance","2.2.2 Regulatory focus","2.2.3 Kirton Adaptation-Innovation Inventory (KAI)","2.3 Emotional intelligence","2.3.1 The three main models of EI","2.3.2 Self-awareness","2.3.3 Self-management","2.3.4 Social awareness","2.3.5 Social skills","2.3.6 The dark side of emotional intelligence","2.4 Toxic leadership","2.4.1 What to do about toxic leaders?","2.5 Making decisions","2.5.1 Bounded rationality and imperfect information","2.5.2 Fast and slow thinking","2.5.3 Managing stress in decision making","2.5.4 Decision-making biases","2.5.5 Personal bias","2.6 Leadership and personal brand","2.7 Developing leadership talent","2.7.1 Attracting and retaining talent","2.7.2 Defining potential","2.8 Motivation and leadership","2.8.1 Theories of motivation","2.9 What does this mean for me?"],
+  flash:[
+    {t:"Emotional intelligence (4 domains)",d:"Self-awareness, self-management, social awareness, and social skills — the core competencies underpinning effective interpersonal leadership."},
+    {t:"The brain as a 'survival machine'",d:"Evolved primarily to keep us alive, running countless unconscious heuristics on limited sensory sampling — so much behaviour is automatic and outside conscious control."},
+    {t:"Fight-or-flight response",d:"The autonomic stress response: adrenaline/noradrenaline/cortisol raise heart rate, blood pressure and breathing; blood shifts to large muscles — impairing calm, reflective decision making."},
+    {t:"Ambiguity tolerance",d:"An individual's capacity to function comfortably amid uncertain, incomplete or contradictory information — important for directors operating without perfect data."},
+    {t:"Regulatory focus",d:"Whether a person is promotion-focused (pursuing gains/aspirations) or prevention-focused (avoiding losses/maintaining security) — shapes risk and decision behaviour."},
+    {t:"Kirton Adaptation-Innovation (KAI)",d:"A measure of cognitive style on an adaptor–innovator spectrum: adaptors improve within the existing framework; innovators prefer to do things differently and challenge the framework."},
+    {t:"The dark side of EI",d:"Emotional intelligence skills can be misused to manipulate, deceive or control others — high EI is not inherently ethical."},
+    {t:"Toxic leadership",d:"Destructive leadership behaviour (e.g., abusive, self-serving, undermining) that harms followers and the organisation; the board must recognise and act on it."},
+    {t:"Bounded rationality",d:"Decisions are made with imperfect information and limited cognitive capacity, so leaders 'satisfice' rather than optimise — awareness of this guards against overconfidence."},
+    {t:"Fast and slow thinking (Kahneman)",d:"System 1 is fast, automatic, intuitive and bias-prone; System 2 is slow, effortful and analytical. Good decisions require knowing when to engage slow thinking."},
+    {t:"Personal brand",d:"The consistent reputation and impression a leader creates; deliberately managed authenticity and integrity strengthen influence."},
+    {t:"Defining potential",d:"Identifying who can grow into bigger roles — assessing aspiration, ability and engagement rather than just current performance."}
+  ],
+  quiz:[
+    {q:"What does the handbook identify as the main source of board/organisational challenge?",c:["Lack of technical competence","The human side — psychology and neuroscience","Insufficient financial reporting","Regulatory complexity"],a:1,e:"Technical competence is rarely the main challenge; the difficulties usually lie in the human domain of psychology and neuroscience."},
+    {q:"Which are the four domains of emotional intelligence used in the module?",c:["IQ, EQ, SQ, PQ","Self-awareness, self-management, social awareness, social skills","Vision, purpose, values, strategy","Adaptor, innovator, promoter, preventer"],a:1,e:"The four EI domains: self-awareness, self-management, social awareness and social skills."},
+    {q:"In the fight-or-flight response, blood is preferentially directed to…",c:["The digestive system","The large muscles of the arms and legs","The skin","The kidneys"],a:1,e:"Blood is shunted from digestion to the large muscles to prepare for physical response — one reason stress impairs calm deliberation."},
+    {q:"The Kirton Adaptation-Innovation Inventory (KAI) measures…",c:["Emotional stability","Cognitive style on an adaptor–innovator spectrum","Ambiguity tolerance only","Risk appetite"],a:1,e:"KAI places people on an adaptor (improve within the framework) to innovator (do things differently) spectrum."},
+    {q:"Which statement about emotional intelligence is accurate per the module?",c:["High EI guarantees ethical behaviour","EI can be misused to manipulate or deceive (a 'dark side')","EI is irrelevant at board level","EI is fixed and cannot be developed"],a:1,e:"EI has a dark side — its skills can be turned to manipulation or control; it is not inherently ethical."},
+    {q:"'Bounded rationality' refers to the idea that leaders…",c:["Always optimise decisions with full data","Decide with imperfect information and limited cognition, tending to satisfice","Avoid all cognitive bias","Rely only on intuition"],a:1,e:"Bounded rationality: imperfect information and limited capacity mean leaders satisfice rather than perfectly optimise."},
+    {q:"In Kahneman's terms, which system is fast, automatic and most prone to bias?",c:["System 1","System 2","System 3","The autonomic system"],a:0,e:"System 1 is fast, intuitive and bias-prone; System 2 is slow and analytical."},
+    {q:"'Regulatory focus' distinguishes between people who are…",c:["Adaptors vs innovators","Promotion-focused vs prevention-focused","Introverts vs extroverts","Transactional vs transformational"],a:1,e:"Regulatory focus contrasts promotion focus (pursuing gains) with prevention focus (avoiding losses/security)."}
+  ]
+},
+{
+  num:3, title:"Leading teams",
+  lo:"Understand how leaders build and sustain high-performing teams, including the board itself (LO3).",
+  acs:["AC3.1 Summarise the purpose of teams and the importance of commitment and competence.",
+       "AC3.2 Describe factors required to develop high-performing teams.",
+       "AC3.3 Define equity, diversity and inclusion and their impact on performance.",
+       "AC3.4 Apply board dynamics to evaluating high-performing vs dysfunctional boards.",
+       "AC3.5 Evaluate approaches and tools for dealing with conflict within teams."],
+  summary:"High-performing teams rest on a shared, measurable purpose plus commitment, competence (technical, problem-solving, social/interpersonal) and high trust. The module addresses team development, the special demands of virtual/dispersed teams (psychological-emotional-social and operational needs), common team problems (social loafing, evaluation apprehension, the Einstellung effect, complacency), and psychological safety via the Clark model. It then applies all of this to the board as a team — composition, EDI, induction, succession, board dynamics, dysfunction, responsibilities/liabilities, conflict, and the chair's role.",
+  subs:["3.1 How to construct successful teams","3.2 Team development","3.3 Virtual (dispersed) team","3.3.1 PSE needs","3.3.2 Operational needs","3.4 Problems in teams","3.4.1 Social loafing","3.4.2 Evaluation apprehension","3.4.3 Einstellung effect","3.4.4 Complacency","3.5 Psychological safety","3.5.1 The Clark model","3.6 The board as a team","3.6.1 Board composition","3.6.2 Equity, diversity and inclusion (EDI) on boards","3.6.3 Effective induction of directors","3.6.4 Succession planning","3.7 Board dynamics","3.7.1 Dysfunctional boards","3.7.2 Board team selection","3.7.3 Responsibilities and liabilities","3.7.4 Structures and processes","3.8 Dealing with conflict","3.9 The role of the chair in a high-performing board","3.10 What does this mean for me?"],
+  flash:[
+    {t:"Four foundations of a successful team",d:"A shared, measurable Purpose; Commitment (ownership of goals and roles); Competence; and Trust. (Commitment tends to fall as team size grows.)"},
+    {t:"Three competencies of a team",d:"Technical competence (specialist knowledge/skills), problem-solving competence (sense-making in ambiguity), and social/interpersonal competence (communicating and working with people)."},
+    {t:"Team purpose",d:"A clear, common purpose intrinsic to the team's identity and owned by all members — simultaneously attainable and stretching, and measurable at team and individual levels."},
+    {t:"Trust in high-performing teams",d:"Confidence in others' knowledge and contribution, plus belief they can be relied on for honesty, openness and steadfast support under pressure — especially vital at board level."},
+    {t:"Social loafing",d:"The tendency of individuals to exert less effort when working in a group than when working alone — a problem teams must design against."},
+    {t:"Evaluation apprehension",d:"Holding back contributions for fear of being judged — suppresses ideas and undermines team performance and innovation."},
+    {t:"Einstellung effect",d:"The tendency to apply a familiar solution and ignore better alternatives because a known approach comes to mind first."},
+    {t:"Psychological safety",d:"A shared belief that the team is safe for interpersonal risk-taking — members can speak up, question and admit mistakes without fear of punishment or humiliation."},
+    {t:"The Clark model (4 stages)",d:"Stages of psychological safety: inclusion safety, learner safety, contributor safety, and challenger safety — progressing from belonging to safely challenging the status quo."},
+    {t:"EDI on boards",d:"Equity, diversity and inclusion improve board and organisational performance by widening perspectives and reducing groupthink — diversity must be paired with genuine inclusion to deliver value."},
+    {t:"Dysfunctional board signs",d:"Poor dynamics such as dominance, groupthink, disengagement, lack of challenge, or unmanaged conflict — undermining the board's effectiveness as a team."},
+    {t:"Role of the chair",d:"Sets tone and dynamics, ensures balanced participation and constructive challenge, manages conflict, and builds the trust that makes a board high-performing."}
+  ],
+  quiz:[
+    {q:"Which set best captures the foundations of a successful team in the handbook?",c:["Vision, mission, values, strategy","Purpose, commitment, competence, trust","Inclusion, learner, contributor, challenger","Speed, cost, quality, scope"],a:1,e:"Successful teams need a shared measurable purpose plus commitment, competence and trust."},
+    {q:"The three competencies required within a successful team are technical, social/interpersonal, and…",c:["Financial competence","Problem-solving competence","Regulatory competence","Charismatic competence"],a:1,e:"Technical, problem-solving, and social/interpersonal competence are the three required."},
+    {q:"'Social loafing' describes…",c:["Spending too long socialising at work","Exerting less individual effort in a group than when working alone","Avoiding social media at work","Building informal networks"],a:1,e:"Social loafing is reduced individual effort in group settings — a classic team problem."},
+    {q:"What is 'psychological safety'?",c:["A workplace health-and-safety policy","A shared belief that the team is safe for interpersonal risk-taking","Job security guarantees","Protection from external competitors"],a:1,e:"Psychological safety = members can speak up, question and admit mistakes without fear of punishment or humiliation."},
+    {q:"The Clark model's four stages of psychological safety are inclusion, learner, contributor and…",c:["Challenger safety","Manager safety","Compliance safety","Founder safety"],a:0,e:"The fourth and highest stage is challenger safety — safely challenging the status quo."},
+    {q:"The Einstellung effect is the tendency to…",c:["Over-trust new team members","Apply a familiar solution while overlooking better alternatives","Avoid all conflict","Conform to the majority view"],a:1,e:"Einstellung: a known approach springs to mind and blocks consideration of superior options."},
+    {q:"Why does the handbook value EDI on boards?",c:["Purely for regulatory compliance","It widens perspectives and reduces groupthink, improving performance — when paired with genuine inclusion","It reduces the need for induction","It guarantees consensus"],a:1,e:"Diversity broadens perspective and curbs groupthink, but must be paired with real inclusion to improve performance."},
+    {q:"What happens to team commitment as the number of members increases?",c:["It tends to increase","It tends to decrease","It is unaffected","It becomes mandatory"],a:1,e:"The handbook notes commitment tends to decrease as team size grows."}
+  ]
+},
+{
+  num:4, title:"Leading your organisation",
+  lo:"Explain how a director's leadership behaviours create a culture enabling the organisation to achieve strategy and respond to crisis and change (LO4).",
+  acs:["AC4.1 Understand key elements of organisational culture and its challenges.",
+       "AC4.2 Define the board director's role in shaping culture and values.",
+       "AC4.3 Analyse responses to risk; establish a risk-aware culture.",
+       "AC4.4 Recognise features of a crisis; devise effective responses.",
+       "AC4.5 Explain the need for ethical awareness and embedding ethical practices.",
+       "AC4.6 Assess ways organisations can foster a culture of innovation.",
+       "AC4.7 Identify critical factors in leading successful organisational change."],
+  summary:"The board must lead the organisation — inspiring delivery of vision and strategy within agreed values and ethics, while balancing recurring tensions (control vs enterprise, short vs long term, conformance vs performance). Culture is the system of shared beliefs and values that drives behaviour (Schein: accumulated shared learning). The module covers risk appetite/tolerance and a risk-aware culture, scenario planning, leading in a crisis (including the first 24 hours), building an ethical organisation (codes, committees, behavioural ethics), fostering innovation (closed/open, disruptive, ten types), and leading change as a human activity.",
+  subs:["4.1 Leadership and the board","4.2 Organisational culture","4.2.1 Three perspectives of culture","4.2.2 Understanding organisational culture","4.3 Responding to risk","4.3.1 Risk appetite and tolerance","4.3.2 Creating a risk-aware culture","4.3.3 Scenario planning","4.4 Leading in a crisis","4.4.1 The role of the board in a crisis","4.4.2 Dealing with a crisis – the first 24 hours","4.5 Leading an ethical organisation","4.5.1 Defining an ethical position","4.5.2 Creating an ethical code","4.5.3 Ethics committees","4.5.4 Ethical misconduct","4.5.5 Behavioural ethics","4.6 Innovation, creativity and entrepreneurship","4.6.1 Innovation and creativity","4.6.2 Fostering innovation","4.6.3 Disruptive innovation","4.6.4 Closed and open innovation","4.6.5 Ten types of innovation","4.7 Leading change","4.7.1 Change as a human activity","4.7.2 The leader's role in change","4.7.3 Change approaches","4.7.4 Undertaking cultural change","4.8 What does this mean for me?"],
+  flash:[
+    {t:"Organisational culture",d:"A system of shared beliefs and values that determines how the organisation behaves internally and externally. Vision, purpose and values are all part of culture."},
+    {t:"Schein's definition of culture",d:"“The accumulated shared learning of a group as it solves its problems of external adaptation and internal integration” — learning that has worked well enough to be taught to new members."},
+    {t:"Board tensions (Bain & Barker)",d:"The board must juggle opposing demands: drive enterprise yet keep control; take calculated risk yet manage it; be informed yet not interfere in day-to-day management; address short-term issues yet protect long-term value; heed local yet non-local influences."},
+    {t:"Risk appetite vs risk tolerance",d:"Risk appetite is the amount/type of risk the organisation is willing to pursue to meet objectives; risk tolerance is the acceptable variation around that — the boundaries within which it operates."},
+    {t:"Risk-aware culture",d:"A culture where risk is openly identified, discussed and owned at all levels — not suppressed — so the organisation takes calculated risks rather than avoiding or ignoring them."},
+    {t:"Scenario planning",d:"Exploring multiple plausible futures to test strategy and prepare responses, building resilience against uncertainty rather than betting on a single forecast."},
+    {t:"Crisis — first 24 hours",d:"Early board priorities: establish facts, protect people and stakeholders, communicate clearly and honestly, take control of the response, and avoid hasty irreversible decisions."},
+    {t:"Behavioural ethics",d:"The study of why people actually behave ethically or unethically (situational and psychological drivers), informing how boards embed ethical practice beyond written codes."},
+    {t:"Disruptive innovation",d:"Innovation that starts in a simpler, often lower-end or new-market niche and progressively displaces established competitors and their business models."},
+    {t:"Closed vs open innovation",d:"Closed innovation relies on internal R&D and ideas; open innovation deliberately draws on external ideas, partners and pathways to market alongside internal ones."},
+    {t:"Change as a human activity",d:"Change succeeds or fails on people, not plans — leaders must address emotions, resistance and motivation, not just process and structure."},
+    {t:"Ethical code",d:"A written articulation of the organisation's ethical position and expected behaviours; effective only when reinforced by leadership example, committees and a supportive culture."}
+  ],
+  quiz:[
+    {q:"How does the handbook define organisational culture?",c:["The company's org chart","A system of shared beliefs and values determining behaviour internally and externally","The set of written policies and procedures","The board's risk appetite"],a:1,e:"Culture is a system of shared beliefs and values that drives how the organisation behaves; vision, purpose and values are part of it."},
+    {q:"Schein describes culture as the accumulated shared learning of a group as it solves problems of…",c:["Marketing and sales","External adaptation and internal integration","Finance and compliance","Recruitment and retention"],a:1,e:"Schein: the accumulated shared learning solving problems of external adaptation and internal integration."},
+    {q:"What is the difference between risk appetite and risk tolerance?",c:["They are synonyms","Appetite = risk willingly pursued for objectives; tolerance = acceptable variation around it","Appetite applies to finance only; tolerance to operations","Tolerance is set by regulators; appetite by the CEO"],a:1,e:"Appetite is the risk the organisation will take to meet objectives; tolerance is the acceptable variation/boundaries around it."},
+    {q:"Per Bain & Barker, the board must balance being informed about the organisation while…",c:["Taking over day-to-day management","Not interfering in day-to-day management","Avoiding all risk","Ignoring long-term value"],a:1,e:"One key tension: the board must be informed yet must not interfere in day-to-day management."},
+    {q:"Disruptive innovation typically…",c:["Begins at the high end and moves down","Starts in a simpler/lower-end or new-market niche and displaces incumbents over time","Only occurs through mergers","Requires closed innovation"],a:1,e:"Disruptive innovation enters via a simpler or new-market foothold and progressively displaces established players."},
+    {q:"'Open innovation' means…",c:["Publishing all R&D for free","Deliberately drawing on external ideas, partners and routes to market alongside internal R&D","Innovation without any process","Only internal brainstorming"],a:1,e:"Open innovation combines external ideas and pathways with internal capability, versus closed (internal-only) innovation."},
+    {q:"Why does the handbook frame change as 'a human activity'?",c:["Because only HR runs change","Because change succeeds or fails on people — emotions, resistance and motivation — not just plans","Because technology is irrelevant","Because structure is the only factor"],a:1,e:"Change is fundamentally about people; leaders must manage emotion, resistance and motivation, not just process."},
+    {q:"In the first 24 hours of a crisis, an effective board response prioritises…",c:["Assigning blame publicly","Establishing facts, protecting people/stakeholders, clear honest communication and taking control","Waiting for media coverage to settle","Making rapid irreversible commitments"],a:1,e:"Early priorities: get the facts, protect people, communicate honestly, take control, and avoid hasty irreversible decisions."}
+  ]
+},
+{
+  num:5, title:"Leading beyond your organisation",
+  lo:"Consider how leaders create influence and impact within and beyond the organisation through stakeholder relations and understanding the wider context (LO5).",
+  acs:["AC5.1 Construct a stakeholder map and assess engagement strategies.",
+       "AC5.2 Describe how connections/influence in the wider community add value.",
+       "AC5.3 Describe benefits and challenges of an environmentally and socially responsible organisation and implications for governance.",
+       "AC5.4 Apply sustainability and circular-economy concepts to board decision making."],
+  summary:"Beyond the organisation, positional authority no longer applies — leaders must influence rather than direct, generating 'willing followers' through trust, integrity and authenticity, especially in alliances and supply chains where strong dyadic (one-to-one) relationships are cornerstones of success. The module covers transactional vs transformational leadership beyond the organisation, understanding and mapping stakeholders, corporate responsibility, sustainable development and the circular economy, and ESG (environmental, social, governance) — including the considerations and challenges of integrating an ESG approach.",
+  subs:["5.1 Building inter-organisational relationships","5.1.1 Working together","5.1.2 Transactional and transformational leadership beyond the organisation","5.2 Understanding stakeholders","5.2.1 Corporate responsibility","5.2.2 Stakeholder approaches","5.2.3 Stakeholder analysis process","5.2.4 Stakeholder communications","5.2.5 Community interaction","5.3 Sustainable development and the circular economy","5.4 Environment, social and governance (ESG)","5.4.1 Considerations for an ESG approach","5.4.2 Challenges of ESG integration","5.5 Environmental (E)","5.5.1 Background","5.5.2 Key areas of environmental concern for boards","5.6 Social (S)","5.6.1 Background","5.6.2 Human and social capital","5.6.3 'Social' focus and guiding principles","5.7 Governance (G)","5.8 What does this mean for me?"],
+  flash:[
+    {t:"Influence beyond the organisation",d:"In alliances and supply chains you cannot rely on positional leadership — even as the client. Position and status alone are insufficient; you must generate 'willing followers' by influencing rather than directing."},
+    {t:"Dyadic relationships",d:"Strong one-to-one relationships with peers in other organisations; an essential cornerstone of inter-organisational success that opens access to wider networks."},
+    {t:"Authenticity and integrity",d:"External parties choose whom to work with based on trust — believing 'what they see is what they get' (authenticity) and that you act with integrity. These outweigh contracts when problems arise."},
+    {t:"Stakeholder",d:"Any individual or group that affects, or is affected by, the organisation's activities — mapped and prioritised to design appropriate engagement strategies."},
+    {t:"Stakeholder mapping",d:"Assessing stakeholders (e.g., by power and interest) to prioritise engagement and tailor communications — a required board-level skill (AC5.1)."},
+    {t:"Transactional vs transformational leadership",d:"Transactional leadership exchanges rewards for performance (focus on tasks/contracts); transformational leadership inspires shared vision and change — both apply beyond the organisation."},
+    {t:"Corporate responsibility",d:"The organisation's accountability for its impact on society and the environment, going beyond legal minimums to consider wider stakeholder interests."},
+    {t:"Sustainable development",d:"Meeting present needs without compromising the ability of future generations to meet theirs — a frame for long-term board decision making."},
+    {t:"Circular economy",d:"An economic model designed to eliminate waste and keep materials in use (reuse, repair, remanufacture, recycle), contrasting with the linear 'take-make-dispose' model."},
+    {t:"ESG",d:"Environmental, Social and Governance — the framework for assessing an organisation's sustainability and responsibility, increasingly central to board oversight."},
+    {t:"Human and social capital",d:"The 'S' in ESG: the value of people (skills, wellbeing, relationships) and the trust/networks within and around the organisation."},
+    {t:"Challenges of ESG integration",d:"Measurement difficulty, data/reporting demands, balancing competing stakeholder expectations, short- vs long-term tensions, and embedding ESG into genuine strategy rather than 'greenwashing'."}
+  ],
+  quiz:[
+    {q:"When leading beyond your organisation (e.g., in an alliance), why is positional leadership insufficient?",c:["Because contracts override all relationships","Because you cannot rely on status/authority over independent parties — you must influence and earn willing followers","Because the board has no role externally","Because external partners always defer to the client"],a:1,e:"Even as the client you can't rely on positional power; you must influence rather than direct and generate willing followers through trust."},
+    {q:"What is a 'dyadic' relationship?",c:["A relationship between two organisations' boards","A strong one-to-one relationship with a peer in another organisation","A three-way alliance","A regulatory relationship"],a:1,e:"Dyadic = one-to-one peer relationships, described as an essential cornerstone of inter-organisational success."},
+    {q:"A stakeholder is best defined as…",c:["A shareholder only","Any individual or group that affects or is affected by the organisation","A board director","A regulator"],a:1,e:"Stakeholders are any individuals/groups who affect or are affected by the organisation — broader than shareholders."},
+    {q:"Transactional leadership is characterised by…",c:["Inspiring a shared transformational vision","Exchanging rewards for performance (task/contract focus)","Eliminating all hierarchy","Avoiding stakeholder engagement"],a:1,e:"Transactional leadership exchanges rewards for performance; transformational leadership inspires vision and change."},
+    {q:"The circular economy is best contrasted with which model?",c:["The 'take-make-dispose' linear model","The transformational model","The closed-innovation model","The bounded-rationality model"],a:0,e:"The circular economy keeps materials in use to eliminate waste, versus the linear take-make-dispose model."},
+    {q:"In ESG, the 'S' primarily concerns…",c:["Shareholder returns","Social factors such as human and social capital","Strategy formulation","Systems and processes"],a:1,e:"'S' = Social, including human and social capital — people, wellbeing, relationships, and community."},
+    {q:"Why do authenticity and integrity matter most when things go wrong with a partner?",c:["They reduce tax liability","Invoking contracts/legal action is costly and slow, so trust-based relationships enable timely resolution","They eliminate the need for stakeholder mapping","They guarantee the partner's compliance"],a:1,e:"Legal recourse is costly and slow; strong personal relationships built on trust allow quicker, constructive problem-solving."},
+    {q:"A common challenge of ESG integration noted in the module is…",c:["It is illegal in most jurisdictions","Measurement/reporting difficulty and balancing competing stakeholder and short/long-term demands (avoiding greenwashing)","It only applies to listed companies","It removes the board's governance role"],a:1,e:"ESG integration faces measurement and reporting challenges, competing expectations, and the risk of superficial 'greenwashing'."}
+  ]
+}
+];
+
+/* ============ STATE (localStorage) ============ */
+const LS="lfd_study_v1";
+let memStore=null; // in-memory fallback if localStorage is blocked (sandboxed frame)
+function load(){
+  try{return JSON.parse(localStorage.getItem(LS))||{}}
+  catch(e){return memStore||{}}
+}
+function save(s){
+  memStore=s;
+  try{localStorage.setItem(LS,JSON.stringify(s))}catch(e){/* storage blocked — keep in memory */}
+}
+let state=load();
+state.done=state.done||{};      // subsection key -> true
+state.notes=state.notes||{};    // module num -> text
+state.known=state.known||{};    // flashcard key -> true
+state.best=state.best||{};      // module num -> best %
+state.plan=state.plan||{};      // plan day id -> true
+save(state);
+
+/* ============ STUDY PLAN (Sun–Sat, Jun 28 – Aug 1; exam 12 Aug) ============ */
+const PLAN=[
+ {wk:1,dates:"Jun 28 – Jul 4",range:"p36 → p73",goal:"Finish Module 1 · Module 2 to end of Emotional Intelligence",days:[
+   {id:"w1d1",d:"Sun Jun 28",p:"p36–42",t:"Finish 1.4 — leadership approaches & adapting styles (1.4.3–1.4.6)"},
+   {id:"w1d2",d:"Mon Jun 29",p:"p43–49",t:"1.5 Followership (1.5.1–1.5.5) · 1.6 What this means"},
+   {id:"w1d3",d:"Tue Jun 30",p:"p50–55",t:"1.7 refs → Module 1 done · 2.1 Intro · 2.2 Neuroscience & psychology"},
+   {id:"w1d4",d:"Wed Jul 1",p:"p56–61",t:"2.2.1 Ambiguity · 2.2.2 Regulatory focus · 2.2.3 KAI · into 2.3 EI"},
+   {id:"w1d5",d:"Thu Jul 2",p:"p62–67",t:"2.3 Emotional intelligence — models, self-awareness, self-management"},
+   {id:"w1d6",d:"Fri Jul 3",p:"p68–73",t:"2.3 EI — social awareness, social skills, dark side of EI"},
+   {id:"w1d7",d:"Sat Jul 4",p:"Review",t:"Modules 1 & 2 flashcards + quizzes (aim 80%+)"}
+ ]},
+ {wk:2,dates:"Jul 5 – Jul 11",range:"p74 → p109",goal:"Finish Module 2 · Module 3 to Psychological Safety",days:[
+   {id:"w2d1",d:"Sun Jul 5",p:"p74–79",t:"2.4 Toxic leadership (2.4.1) · 2.5 Making decisions (bounded rationality)"},
+   {id:"w2d2",d:"Mon Jul 6",p:"p80–85",t:"2.5 fast/slow thinking, stress, biases · 2.6 Personal brand · 2.7 Talent"},
+   {id:"w2d3",d:"Tue Jul 7",p:"p86–91",t:"2.7.2 Defining potential · 2.8 Motivation (2.8.1 theories)"},
+   {id:"w2d4",d:"Wed Jul 8",p:"p92–97",t:"2.9/2.10 → Module 2 done · 3.1 Constructing teams · 3.2 Development"},
+   {id:"w2d5",d:"Thu Jul 9",p:"p98–103",t:"3.3 Virtual teams (PSE & operational) · 3.4 Problems (social loafing…)"},
+   {id:"w2d6",d:"Fri Jul 10",p:"p104–109",t:"3.4 Complacency · 3.5 Psychological safety + Clark model"},
+   {id:"w2d7",d:"Sat Jul 11",p:"Review",t:"Modules 2 & 3 flashcards + quizzes"}
+ ]},
+ {wk:3,dates:"Jul 12 – Jul 18",range:"p110 → p145",goal:"Finish Module 3 · Module 4 through risk & crisis intro",days:[
+   {id:"w3d1",d:"Sun Jul 12",p:"p110–115",t:"3.6 The board as a team — composition, EDI on boards"},
+   {id:"w3d2",d:"Mon Jul 13",p:"p116–121",t:"3.6.3 Induction · 3.6.4 Succession · 3.7 Board dynamics (dysfunctional, selection)"},
+   {id:"w3d3",d:"Tue Jul 14",p:"p122–127",t:"3.7.4 Structures · 3.8 Conflict · 3.9 The chair · 3.10 → Module 3 done"},
+   {id:"w3d4",d:"Wed Jul 15",p:"p128–133",t:"3.11 refs · 4.1 Leadership & the board · 4.2 Organisational culture"},
+   {id:"w3d5",d:"Thu Jul 16",p:"p134–139",t:"4.2 Culture perspectives · 4.3 Responding to risk"},
+   {id:"w3d6",d:"Fri Jul 17",p:"p140–145",t:"4.3 Risk appetite/tolerance, risk-aware culture, scenario planning · 4.4 Crisis (board role)"},
+   {id:"w3d7",d:"Sat Jul 18",p:"Review",t:"Module 3 flashcards + quiz"}
+ ]},
+ {wk:4,dates:"Jul 19 – Jul 25",range:"p146 → p182",goal:"Finish Module 4 · Module 5 through stakeholder approaches",days:[
+   {id:"w4d1",d:"Sun Jul 19",p:"p146–152",t:"4.4.2 Crisis – first 24 hrs · 4.5 Ethical organisation (position, code, committees, behavioural ethics)"},
+   {id:"w4d2",d:"Mon Jul 20",p:"p153–158",t:"4.6 Innovation — creativity, fostering, disruptive, closed/open"},
+   {id:"w4d3",d:"Tue Jul 21",p:"p159–164",t:"4.6.5 Ten types of innovation · 4.7 Leading change (change as a human activity)"},
+   {id:"w4d4",d:"Wed Jul 22",p:"p165–170",t:"4.7 Leader's role, change approaches, cultural change · 4.8 → Module 4 done"},
+   {id:"w4d5",d:"Thu Jul 23",p:"p171–176",t:"4.9 refs · 5.1 Inter-org relationships (working together, transactional/transformational)"},
+   {id:"w4d6",d:"Fri Jul 24",p:"p177–182",t:"5.1.2 · 5.2 Understanding stakeholders (corporate responsibility, approaches)"},
+   {id:"w4d7",d:"Sat Jul 25",p:"Review",t:"Module 4 flashcards + quiz"}
+ ]},
+ {wk:5,dates:"Jul 26 – Aug 1",range:"p183 → p218",goal:"Finish Module 5 · first full review pass",days:[
+   {id:"w5d1",d:"Sun Jul 26",p:"p183–188",t:"5.2.2 Stakeholder approaches · 5.2.3 Stakeholder analysis process"},
+   {id:"w5d2",d:"Mon Jul 27",p:"p189–194",t:"5.2.4 Communications · 5.2.5 Community · 5.3 Sustainable development"},
+   {id:"w5d3",d:"Tue Jul 28",p:"p195–200",t:"5.3 Circular economy · 5.4 ESG (considerations)"},
+   {id:"w5d4",d:"Wed Jul 29",p:"p201–206",t:"5.4.2 ESG challenges · 5.5 Environmental"},
+   {id:"w5d5",d:"Thu Jul 30",p:"p207–212",t:"5.6 Social — human/social capital, guiding principles"},
+   {id:"w5d6",d:"Fri Jul 31",p:"p213–218",t:"5.7 Governance · 5.8/5.9 → Module 5 done"},
+   {id:"w5d7",d:"Sat Aug 1",p:"Review",t:"Module 5 + all-module mixed quiz · plan complete 🎯"}
+ ]}
+];
+
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=t=>t.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+/* Map each module's flashcards/quiz to the study-plan week that covers that material.
+   (Weeks span parts of two modules, so cards within one module split across weeks.) */
+const FC_WEEK={
+  1:[1,1,1,1,1,1,1,1,1,1,1],
+  2:[1,1,1,1,1,1,1,2,2,2,2,2],
+  3:[2,2,2,2,2,2,2,2,2,3,3,3],
+  4:[3,3,3,3,3,3,4,4,4,4,4,4],
+  5:[4,4,4,4,5,4,4,5,5,5,5,5]
+};
+const QZ_WEEK={
+  1:[1,1,1,1,1,1,1],
+  2:[1,1,1,1,1,2,2,1],
+  3:[2,2,2,2,2,2,3,2],
+  4:[3,3,3,3,4,4,4,4],
+  5:[4,4,4,4,5,5,4,5]
+};
+
+/* ============ TABS ============ */
+$$(".tab").forEach(b=>b.onclick=()=>{
+  $$(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+  ["progress","plan","sections","flash","quiz"].forEach(t=>$("#tab-"+t).classList.toggle("hidden",t!==b.dataset.tab));
+});
+
+/* ============ OVERVIEW ============ */
+function totalSubs(){return MODULES.reduce((n,m)=>n+m.subs.length,0)}
+function doneCount(){return Object.values(state.done).filter(Boolean).length}
+function modDone(m){return m.subs.filter(s=>state.done[m.num+"|"+s]).length}
+function renderProgress(){
+  const total=totalSubs(),done=doneCount(),pct=total?Math.round(done/total*100):0;
+  $("#overallBar").style.width=pct+"%";$("#overallPct").textContent=pct+"%";$("#overallCount").textContent=done+"/"+total;
+  const fcTotal=MODULES.reduce((n,m)=>n+m.flash.length,0);
+  const fcKnown=Object.values(state.known).filter(Boolean).length;
+  const bestAvg=(()=>{const v=[1,2,3,4,5].map(i=>state.best["w"+i]||0);return Math.round(v.reduce((a,b)=>a+b,0)/v.length)})();
+  let h=`<div class="card">
+    <h2 class="modtitle" style="font-size:17px">Your progress</h2>
+    <div class="kpi">
+      <div class="box"><b>${pct}%</b><span>${done}/${total} subsections studied</span></div>
+      <div class="box"><b>${fcKnown}/${fcTotal}</b><span>flashcards marked 'got it'</span></div>
+      <div class="box"><b>${bestAvg}%</b><span>avg best quiz score</span></div>
+    </div>
+  </div>`;
+  h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Reading by module</h2>`;
+  MODULES.forEach(m=>{
+    const d=modDone(m),t=m.subs.length,p=Math.round(d/t*100);
+    h+=`<div style="margin:12px 0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="mnum">M${m.num}</span><b style="font-size:14px">${esc(m.title)}</b>
+        <span class="miniprog">${d}/${t} subsections</span>
+      </div>
+      <div class="bar" style="margin-top:6px"><i style="width:${p}%"></i></div>
+    </div>`;
+  });
+  h+=`</div>`;
+  h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Quiz best by week</h2><div class="kpi">`;
+  [1,2,3,4,5].forEach(i=>{const b=state.best["w"+i];h+=`<div class="box"><b>${b!=null?b+"%":"–"}</b><span>Week ${i}</span></div>`;});
+  h+=`</div><p style="margin-top:14px"><button class="reset" id="resetAll">Reset all progress</button></p></div>`;
+  $("#tab-progress").innerHTML=h;
+  $("#resetAll").onclick=()=>{if(confirm("Reset all progress, notes, flashcard status and quiz scores?")){try{localStorage.removeItem(LS)}catch(e){}memStore=null;state={done:{},notes:{},known:{},best:{},plan:{}};save(state);renderAll();}};
+}
+
+/* ============ STUDY PLAN ============ */
+function pageCount(p){
+  // parse "p36–42" / "p36-42" -> number of pages; single "p183" -> 1; non-reading -> 0
+  const m=String(p).match(/p(\d+)\s*[–-]\s*(\d+)/);
+  if(m)return (+m[2]-+m[1]+1);
+  const s=String(p).match(/^p(\d+)$/);
+  return s?1:0;
+}
+function weekPages(w){return w.days.reduce((n,d)=>n+pageCount(d.p),0)}
+function renderPlan(){
+  const totalDays=PLAN.reduce((n,w)=>n+w.days.length,0);
+  const doneDays=PLAN.reduce((n,w)=>n+w.days.filter(d=>state.plan[d.id]).length,0);
+  const pct=Math.round(doneDays/totalDays*100);
+  const totalPages=PLAN.reduce((n,w)=>n+weekPages(w),0);
+  const donePages=PLAN.reduce((n,w)=>n+w.days.filter(d=>state.plan[d.id]).reduce((a,d)=>a+pageCount(d.p),0),0);
+  let h=`<div class="card">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <h2 class="modtitle" style="font-size:17px">5-week plan · Sun Jun 28 → Sat Aug 1</h2>
+      <span class="miniprog">Exam 12 Aug · Aug 2–11 = revision buffer</span>
+    </div>
+    <p class="note" style="margin:6px 0 10px">${totalPages} pages (p36–218) · ~${Math.round(totalPages/5)} pp/week. You finished through p35 — tick each day as you go.</p>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <p class="sub" style="margin-top:6px">${pct}% · ${doneDays}/${totalDays} days · ${donePages}/${totalPages} pages read</p>
+  </div>`;
+  PLAN.forEach(w=>{
+    const wd=w.days.filter(d=>state.plan[d.id]).length, wt=w.days.length;
+    const wdone=wd===wt;const wp=weekPages(w);
+    h+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="mnum">Week ${w.wk}</span>
+        <b style="font-size:14px">${esc(w.dates)}</b>
+        <span class="mnum" style="background:#e7f1ff;color:var(--brand2)">${esc(w.range)}</span>
+        <span class="mnum" style="background:var(--good-bg);color:var(--accent)">${wp} pages</span>
+        <span class="miniprog">${wd}/${wt} ${wdone?'✓':''}</span>
+      </div>
+      <p class="lo" style="margin-top:6px"><b>Goal:</b> ${esc(w.goal)}</p>
+      <div style="margin-top:10px">`;
+    w.days.forEach(d=>{
+      const on=!!state.plan[d.id];const rev=/Review|Catch|Buffer/i.test(d.p);
+      const pp=pageCount(d.p);
+      h+=`<label class="planrow ${on?'done':''}" style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);cursor:pointer">
+        <input type="checkbox" data-pid="${d.id}" ${on?'checked':''} style="margin-top:3px;width:16px;height:16px;accent-color:var(--accent);flex:0 0 auto">
+        <span style="flex:0 0 92px;font-weight:600;font-size:12.5px;color:var(--muted)">${esc(d.d)}</span>
+        <span class="mnum" style="flex:0 0 auto;font-size:11.5px;${rev?'background:#fdf3e7;color:var(--warn)':''}">${esc(d.p)}</span>
+        <span style="flex:0 0 auto;font-size:11.5px;color:var(--muted);min-width:42px">${pp?pp+' pp':'—'}</span>
+        <span style="font-size:13px">${esc(d.t)}</span>
+      </label>`;
+    });
+    h+=`</div></div>`;
+  });
+  $("#tab-plan").innerHTML=h;
+  $$('#tab-plan input[type=checkbox]').forEach(cb=>cb.onchange=()=>{
+    state.plan[cb.dataset.pid]=cb.checked;save(state);
+    cb.closest(".planrow").classList.toggle("done",cb.checked);
+    renderPlan();
+  });
+}
+
+/* ============ SECTIONS + NOTES ============ */
+function renderSections(){
+  let h="";
+  MODULES.forEach(m=>{
+    const d=modDone(m),t=m.subs.length;
+    h+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="mnum">Module ${m.num}</span>
+        <span class="modtitle" style="font-size:16px">${esc(m.title)}</span>
+        <span class="miniprog">${d}/${t} done</span>
+      </div>
+      <p class="lo"><b>Learning outcome:</b> ${esc(m.lo)}</p>
+      <p class="summary">${esc(m.summary)}</p>
+      <details style="margin-top:8px"><summary class="note" style="cursor:pointer;font-weight:600">Assessment criteria (${m.acs.length})</summary>
+        <ul class="acs">${m.acs.map(a=>`<li>${esc(a)}</li>`).join("")}</ul></details>
+      <ul class="section-list">`;
+    m.subs.forEach(s=>{
+      const k=m.num+"|"+s,on=!!state.done[k];
+      h+=`<li class="${on?'done':''}"><input type="checkbox" data-k="${esc(k)}" ${on?'checked':''}><label data-k="${esc(k)}">${esc(s)}</label></li>`;
+    });
+    h+=`</ul>
+      <details class="notes"><summary>My notes for Module ${m.num} ${state.notes[m.num]?'•':''}</summary>
+        <textarea data-mod="${m.num}" placeholder="Jot key takeaways, questions, exam reminders…">${esc(state.notes[m.num]||"")}</textarea>
+        <span class="saved" id="saved-${m.num}">saved ✓</span>
+      </details>
+    </div>`;
+  });
+  $("#tab-sections").innerHTML=h;
+  $$('#tab-sections input[type=checkbox]').forEach(cb=>cb.onchange=()=>{
+    state.done[cb.dataset.k]=cb.checked;save(state);
+    cb.closest("li").classList.toggle("done",cb.checked);
+    renderProgress();
+    // update mini counters
+    renderSectionCounts();
+  });
+  $$('#tab-sections textarea').forEach(ta=>{
+    let to;ta.oninput=()=>{clearTimeout(to);to=setTimeout(()=>{
+      state.notes[ta.dataset.mod]=ta.value;save(state);
+      const s=$("#saved-"+ta.dataset.mod);s.style.opacity=1;setTimeout(()=>s.style.opacity=0,1200);
+    },350);};
+  });
+}
+function renderSectionCounts(){
+  // lightweight refresh of the "x/y done" chips without full re-render
+  $$('#tab-sections .card').forEach((card,i)=>{
+    const m=MODULES[i];const chip=card.querySelector('.miniprog');
+    if(chip)chip.textContent=modDone(m)+"/"+m.subs.length+" done";
+  });
+}
+
+/* ============ FLASHCARDS ============ */
+let deck=[],fcIdx=0,reviewMode=false,listMode=false;
+function buildDeck(){
+  const sel=$("#fcModule").value;
+  let cards=[];
+  MODULES.forEach(m=>m.flash.forEach((f,i)=>{const wk=FC_WEEK[m.num][i];if(sel==="all"||+sel===wk)cards.push({...f,key:m.num+"#"+i,mod:m.num,wk});}));
+  if(reviewMode)cards=cards.filter(c=>!state.known[c.key]);
+  deck=cards;fcIdx=0;showCard();
+  if(listMode)renderList();
+}
+function renderList(){
+  const sel=$("#fcModule").value;
+  const title=sel==="all"?"All weeks":"Week "+sel;
+  let h=`<div class="card"><p class="fclist-head">${title} — ${deck.length} flashcards</p>`;
+  if(!deck.length)h+=`<p class="note">No cards here (try turning off 'Review unknown only').</p>`;
+  deck.forEach(c=>{h+=`<div class="fclist-item"><h4>${esc(c.t)} <span class="tagm">· Week ${c.wk} · M${c.mod}${state.known[c.key]?" · known ✓":""}</span></h4><p>${esc(c.d)}</p></div>`;});
+  h+=`</div>`;
+  $("#fcList").innerHTML=h;
+}
+function showCard(){
+  const f=$("#flash");f.classList.remove("flip");
+  if(!deck.length){$("#fcFront").textContent="No cards here";$("#fcBack").textContent="";$("#fcTag").textContent="";$("#fcProgress").textContent="";return;}
+  if(fcIdx<0)fcIdx=deck.length-1;if(fcIdx>=deck.length)fcIdx=0;
+  const c=deck[fcIdx];
+  $("#fcTag").textContent="Week "+c.wk+" · M"+c.mod+(state.known[c.key]?" · known ✓":"");
+  $("#fcFront").textContent=c.t;$("#fcBack").textContent=c.d;
+  $("#fcProgress").textContent=`Card ${fcIdx+1} of ${deck.length}`;
+}
+function initFlash(){
+  const sel=$("#fcModule");sel.innerHTML='<option value="all">All weeks</option>'+[1,2,3,4,5].map(w=>`<option value="${w}">Week ${w}</option>`).join("");
+  sel.onchange=()=>{reviewMode=false;buildDeck()};
+  $("#flash").onclick=()=>$("#flash").classList.toggle("flip");
+  $("#fcNext").onclick=()=>{fcIdx++;showCard()};
+  $("#fcPrev").onclick=()=>{fcIdx--;showCard()};
+  $("#fcShuffle").onclick=()=>{for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}fcIdx=0;showCard()};
+  $("#fcReview").onclick=()=>{reviewMode=!reviewMode;$("#fcReview").classList.toggle("primary",reviewMode);buildDeck()};
+  $("#fcListBtn").onclick=()=>{
+    listMode=!listMode;
+    $("#fcListBtn").classList.toggle("primary",listMode);
+    $("#fcListBtn").textContent=listMode?"🗂 Card view":"📄 List all";
+    $("#fcList").classList.toggle("hidden",!listMode);
+    $("#flash").classList.toggle("hidden",listMode);
+    $(".fc-nav").classList.toggle("hidden",listMode);
+    $("#fcShuffle").classList.toggle("hidden",listMode);
+    if(listMode)renderList();
+  };
+  $("#fcGotIt").onclick=()=>{if(deck[fcIdx]){state.known[deck[fcIdx].key]=true;save(state);renderProgress();fcIdx++;showCard()}};
+  $("#fcNotYet").onclick=()=>{if(deck[fcIdx]){state.known[deck[fcIdx].key]=false;save(state);renderProgress();fcIdx++;showCard()}};
+  buildDeck();
+}
+
+/* ============ QUIZ ============ */
+function initQuiz(){
+  const sel=$("#qzModule");sel.innerHTML='<option value="all">All weeks (mixed)</option>'+[1,2,3,4,5].map(w=>`<option value="${w}">Week ${w}</option>`).join("");
+  $("#qzStart").onclick=()=>startQuiz(false);
+  $("#qzAI").onclick=()=>startQuiz(true);
+}
+function pickQuestions(){
+  const sel=$("#qzModule").value;let pool=[];
+  MODULES.forEach(m=>m.quiz.forEach((q,i)=>{const wk=QZ_WEEK[m.num][i];if(sel==="all"||+sel===wk)pool.push({...q,mod:m.num,wk});}));
+  for(let i=pool.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[pool[i],pool[j]]=[pool[j],pool[i]]}
+  return pool.slice(0,Math.min(6,pool.length));
+}
+async function startQuiz(useAI){
+  const area=$("#qzArea");const sel=$("#qzModule").value;
+  let qs;
+  if(useAI){
+    area.innerHTML=`<p class="note"><span class="spin"></span>Generating fresh questions with Claude…</p>`;
+    qs=await aiQuestions(sel);
+    if(!qs||!qs.length){area.innerHTML=`<p class="note">Couldn't generate AI questions right now — using the built-in set instead.</p>`;qs=pickQuestions();}
+  } else {qs=pickQuestions();}
+  renderQuiz(qs,sel);
+}
+async function aiQuestions(sel){
+  if(!(window.cowork&&window.cowork.askClaude))return null;
+  // gather the flashcard material that falls in the selected week (or all weeks)
+  let terms=[];const titles=new Set();
+  MODULES.forEach(m=>m.flash.forEach((f,i)=>{const wk=FC_WEEK[m.num][i];if(sel==="all"||+sel===wk){terms.push(`${f.t}: ${f.d}`);titles.add(`M${m.num} ${m.title}`);}}));
+  const scope=sel==="all"?"the whole handbook":("study-plan Week "+sel);
+  const ctx=`Scope: ${scope}. Modules covered: ${[...titles].join("; ")}\n\nKey points:\n${terms.join("\n")}`;
+  const prompt=`You are writing exam-style multiple-choice questions for the IoD "Leadership for Directors" handbook, for ${scope}. Using ONLY the material below, write 6 fresh, non-trivial multiple-choice questions (4 options each, exactly one correct). Vary difficulty. Return STRICT JSON: an array of objects {"q":"...","c":["a","b","c","d"],"a":<0-3 index of correct>,"e":"one-sentence explanation","mod":<module number>}. No prose, JSON only.\n\nMATERIAL:\n${ctx}`;
+  try{
+    const r=await window.cowork.askClaude(prompt,[]);
+    const txt=typeof r==="string"?r:(r&&(r.text||r.content||JSON.stringify(r)));
+    const m=txt.match(/\[[\s\S]*\]/);if(!m)return null;
+    const arr=JSON.parse(m[0]);
+    return arr.filter(o=>o&&o.c&&o.c.length===4&&typeof o.a==="number");
+  }catch(e){return null}
+}
+function renderQuiz(qs,sel){
+  const area=$("#qzArea");
+  if(!qs.length){area.innerHTML="<p class='note'>No questions available.</p>";return;}
+  let h=`<div id="quizForm">`;
+  qs.forEach((q,i)=>{
+    h+=`<div class="card q" data-i="${i}"><p class="qtext">${i+1}. ${esc(q.q)} <span class="note">(M${q.mod})</span></p><div class="choices">`;
+    q.c.forEach((c,ci)=>h+=`<button class="choice" data-i="${i}" data-c="${ci}">${esc(c)}</button>`);
+    h+=`</div><p class="explain" data-i="${i}">${esc(q.e||"")}</p></div>`;
+  });
+  h+=`</div><button class="btn primary" id="qzSubmit">Submit answers</button><div id="qzScore" style="margin-top:14px"></div>`;
+  area.innerHTML=h;
+  const answers={};
+  $$('#quizForm .choice').forEach(b=>b.onclick=()=>{
+    const i=b.dataset.i;answers[i]=+b.dataset.c;
+    $$(`#quizForm .choice[data-i="${i}"]`).forEach(x=>x.classList.remove("sel"));b.classList.add("sel");
+  });
+  $("#qzSubmit").onclick=()=>{
+    let correct=0;
+    qs.forEach((q,i)=>{
+      $$(`#quizForm .choice[data-i="${i}"]`).forEach(x=>{
+        const ci=+x.dataset.c;x.disabled=true;
+        if(ci===q.a)x.classList.add("correct");
+        if(answers[i]===ci&&ci!==q.a)x.classList.add("wrong");
+      });
+      $(`.explain[data-i="${i}"]`).classList.add("show");
+      if(answers[i]===q.a)correct++;
+    });
+    const pct=Math.round(correct/qs.length*100);
+    let scoreh=`<p class="quiz-result">Score: ${correct}/${qs.length} (${pct}%)</p>`;
+    if(sel!=="all"){
+      const key="w"+sel;const prev=state.best[key]||0;
+      if(pct>prev){state.best[key]=pct;save(state);scoreh+=`<p class="note">New best for Week ${sel}! 🎉</p>`;}
+      else scoreh+=`<p class="note">Your best for Week ${sel}: ${prev}%</p>`;
+      renderProgress();
+    }
+    scoreh+=`<p style="margin-top:8px"><button class="btn" id="qzAgain">Try again</button></p>`;
+    $("#qzScore").innerHTML=scoreh;$("#qzSubmit").disabled=true;
+    $("#qzAgain").onclick=()=>startQuiz(false);
+    $("#qzScore").scrollIntoView({behavior:"smooth",block:"nearest"});
+  };
+}
+
+/* ============ INIT ============ */
+function renderAll(){renderProgress();renderPlan();renderSections();}
+renderAll();initFlash();initQuiz();
+</script>
+</body>
+</html>
