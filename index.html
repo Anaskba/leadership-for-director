@@ -104,15 +104,12 @@ select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10
   <nav class="tabs">
     <button class="tab active" data-tab="progress">Overview</button>
     <button class="tab" data-tab="plan">Study Plan</button>
-    <button class="tab" data-tab="sections">Sections &amp; Notes</button>
     <button class="tab" data-tab="flash">Flashcards</button>
     <button class="tab" data-tab="quiz">Quiz</button>
   </nav>
 
   <section id="tab-progress"></section>
   <section id="tab-plan" class="hidden"></section>
-  <section id="tab-sections" class="hidden"></section>
-
   <section id="tab-flash" class="hidden">
     <div class="card">
       <div class="fc-toolbar">
@@ -428,7 +425,7 @@ const QZ_WEEK={
 /* ============ TABS ============ */
 $$(".tab").forEach(b=>b.onclick=()=>{
   $$(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");
-  ["progress","plan","sections","flash","quiz"].forEach(t=>$("#tab-"+t).classList.toggle("hidden",t!==b.dataset.tab));
+  ["progress","plan","flash","quiz"].forEach(t=>$("#tab-"+t).classList.toggle("hidden",t!==b.dataset.tab));
 });
 
 /* ============ OVERVIEW ============ */
@@ -526,55 +523,6 @@ function renderPlan(){
   });
 }
 
-/* ============ SECTIONS + NOTES ============ */
-function renderSections(){
-  let h="";
-  MODULES.forEach(m=>{
-    const d=modDone(m),t=m.subs.length;
-    h+=`<div class="card">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="mnum">Module ${m.num}</span>
-        <span class="modtitle" style="font-size:16px">${esc(m.title)}</span>
-        <span class="miniprog">${d}/${t} done</span>
-      </div>
-      <p class="lo"><b>Learning outcome:</b> ${esc(m.lo)}</p>
-      <p class="summary">${esc(m.summary)}</p>
-      <details style="margin-top:8px"><summary class="note" style="cursor:pointer;font-weight:600">Assessment criteria (${m.acs.length})</summary>
-        <ul class="acs">${m.acs.map(a=>`<li>${esc(a)}</li>`).join("")}</ul></details>
-      <ul class="section-list">`;
-    m.subs.forEach(s=>{
-      const k=m.num+"|"+s,on=!!state.done[k];
-      h+=`<li class="${on?'done':''}"><input type="checkbox" data-k="${esc(k)}" ${on?'checked':''}><label data-k="${esc(k)}">${esc(s)}</label></li>`;
-    });
-    h+=`</ul>
-      <details class="notes"><summary>My notes for Module ${m.num} ${state.notes[m.num]?'•':''}</summary>
-        <textarea data-mod="${m.num}" placeholder="Jot key takeaways, questions, exam reminders…">${esc(state.notes[m.num]||"")}</textarea>
-        <span class="saved" id="saved-${m.num}">saved ✓</span>
-      </details>
-    </div>`;
-  });
-  $("#tab-sections").innerHTML=h;
-  $$('#tab-sections input[type=checkbox]').forEach(cb=>cb.onchange=()=>{
-    state.done[cb.dataset.k]=cb.checked;save(state);
-    cb.closest("li").classList.toggle("done",cb.checked);
-    renderProgress();
-    // update mini counters
-    renderSectionCounts();
-  });
-  $$('#tab-sections textarea').forEach(ta=>{
-    let to;ta.oninput=()=>{clearTimeout(to);to=setTimeout(()=>{
-      state.notes[ta.dataset.mod]=ta.value;save(state);
-      const s=$("#saved-"+ta.dataset.mod);s.style.opacity=1;setTimeout(()=>s.style.opacity=0,1200);
-    },350);};
-  });
-}
-function renderSectionCounts(){
-  // lightweight refresh of the "x/y done" chips without full re-render
-  $$('#tab-sections .card').forEach((card,i)=>{
-    const m=MODULES[i];const chip=card.querySelector('.miniprog');
-    if(chip)chip.textContent=modDone(m)+"/"+m.subs.length+" done";
-  });
-}
 
 /* ============ FLASHCARDS ============ */
 let deck=[],fcIdx=0,reviewMode=false,listMode=false;
@@ -708,7 +656,7 @@ function renderQuiz(qs,sel){
 }
 
 /* ============ INIT ============ */
-function renderAll(){renderProgress();renderPlan();renderSections();}
+function renderAll(){renderProgress();renderPlan();}
 renderAll();initFlash();initQuiz();
 </script>
 </body>
