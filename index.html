@@ -104,38 +104,27 @@ select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10
   <nav class="tabs">
     <button class="tab active" data-tab="progress">Overview</button>
     <button class="tab" data-tab="plan">Study Plan</button>
-    <button class="tab" data-tab="flash">Flashcards</button>
+    <button class="tab" data-tab="flash">Summary</button>
     <button class="tab" data-tab="quiz">Quiz</button>
   </nav>
 
   <section id="tab-progress"></section>
   <section id="tab-plan" class="hidden"></section>
   <section id="tab-flash" class="hidden">
-    <div class="card">
+    <div class="card" style="margin-bottom:14px">
       <div class="fc-toolbar">
-        <label class="note">Deck:</label>
-        <select id="fcModule"><option value="all">All modules</option></select>
-        <span class="fc-count" id="fcProgress"></span>
-        <button class="btn ghost" id="fcListBtn" style="margin-left:auto">📄 List all</button>
-        <button class="btn ghost" id="fcShuffle">Shuffle</button>
-        <button class="btn ghost" id="fcReview">Review unknown only</button>
-      </div>
-      <div id="fcList" class="hidden"></div>
-      <div class="flash" id="flash">
-        <div class="flash-inner">
-          <div class="face front"><div class="tag" id="fcTag"></div><div class="term" id="fcFront"></div><div class="hint">click to flip</div></div>
-          <div class="face back"><div class="tag">Definition</div><div class="def" id="fcBack"></div></div>
-        </div>
-      </div>
-      <div class="fc-nav">
-        <button class="btn" id="fcPrev">‹ Prev</button>
-        <div class="fc-known">
-          <button class="btn ghost" id="fcNotYet">Still learning</button>
-          <button class="btn primary" id="fcGotIt">Got it ✓</button>
-        </div>
-        <button class="btn" id="fcNext">Next ›</button>
+        <label class="note">Week:</label>
+        <select id="sumWeek">
+          <option value="all">All weeks</option>
+          <option value="1">Week 1</option>
+          <option value="2">Week 2</option>
+          <option value="3">Week 3</option>
+          <option value="4">Week 4</option>
+          <option value="5">Week 5</option>
+        </select>
       </div>
     </div>
+    <div id="sumArea"></div>
   </section>
 
   <section id="tab-quiz" class="hidden">
@@ -426,6 +415,7 @@ const QZ_WEEK={
 $$(".tab").forEach(b=>b.onclick=()=>{
   $$(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");
   ["progress","plan","flash","quiz"].forEach(t=>$("#tab-"+t).classList.toggle("hidden",t!==b.dataset.tab));
+  if(b.dataset.tab==="flash")renderSummary();
 });
 
 /* ============ OVERVIEW ============ */
@@ -437,15 +427,13 @@ function renderProgress(){
   const doneDays=PLAN.reduce((n,w)=>n+w.days.filter(d=>state.plan[d.id]).length,0);
   const pct=totalDays?Math.round(doneDays/totalDays*100):0;
   $("#overallBar").style.width=pct+"%";$("#overallPct").textContent=pct+"%";$("#overallCount").textContent=doneDays+"/"+totalDays;
-  const fcTotal=MODULES.reduce((n,m)=>n+m.flash.length,0);
-  const fcKnown=Object.values(state.known).filter(Boolean).length;
   const bestScores=[1,2,3,4,5].map(i=>state.best["w"+i]).filter(v=>v!=null);
   const bestAvg=bestScores.length?Math.round(bestScores.reduce((a,b)=>a+b,0)/bestScores.length):null;
   let h=`<div class="card">
     <h2 class="modtitle" style="font-size:17px">Your progress</h2>
     <div class="kpi">
       <div class="box"><b>${pct}%</b><span>${doneDays}/${totalDays} study days complete</span></div>
-      <div class="box"><b>${fcKnown}/${fcTotal}</b><span>flashcards marked 'got it'</span></div>
+      <div class="box"><b>${bestScores.length}/5</b><span>weeks quizzed</span></div>
       <div class="box"><b>${bestAvg!=null?bestAvg+"%":"–"}</b><span>avg best quiz score</span></div>
     </div>
   </div>`;
@@ -463,13 +451,6 @@ function renderProgress(){
     </div>`;
   });
   h+=`</div>`;
-  h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Flashcards by module</h2><div class="kpi">`;
-  MODULES.forEach(m=>{
-    const total=m.flash.length;
-    const known=m.flash.filter((f,i)=>state.known[m.num+"#"+i]).length;
-    h+=`<div class="box"><b>${known}/${total}</b><span>M${m.num} · ${esc(m.title)}</span></div>`;
-  });
-  h+=`</div></div>`;
   h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Quiz best score by week</h2><div class="kpi">`;
   [1,2,3,4,5].forEach(i=>{const b=state.best["w"+i];h+=`<div class="box"><b>${b!=null?b+"%":"–"}</b><span>Week ${i}</span></div>`;});
   h+=`</div><p style="margin-top:14px"><button class="reset" id="resetAll">Reset all progress</button></p></div>`;
@@ -536,55 +517,32 @@ function renderPlan(){
 }
 
 
-/* ============ FLASHCARDS ============ */
-let deck=[],fcIdx=0,reviewMode=false,listMode=false;
-function buildDeck(){
-  const sel=$("#fcModule").value;
-  let cards=[];
-  MODULES.forEach(m=>m.flash.forEach((f,i)=>{const wk=FC_WEEK[m.num][i];if(sel==="all"||+sel===wk)cards.push({...f,key:m.num+"#"+i,mod:m.num,wk});}));
-  if(reviewMode)cards=cards.filter(c=>!state.known[c.key]);
-  deck=cards;fcIdx=0;showCard();
-  if(listMode)renderList();
+/* ============ SUMMARY ============ */
+function renderSummary(){
+  const sel=$("#sumWeek").value;
+  let h="";
+  [1,2,3,4,5].forEach(wk=>{
+    if(sel!=="all"&&+sel!==wk)return;
+    const entries=[];
+    MODULES.forEach(m=>m.flash.forEach((f,i)=>{if(FC_WEEK[m.num][i]===wk)entries.push({...f,mod:m.num,title:m.title});}));
+    if(!entries.length)return;
+    const weekPlan=PLAN[wk-1];
+    h+=`<div class="card">
+      <h2 class="modtitle" style="font-size:16px;margin-bottom:2px">Week ${wk} · ${esc(weekPlan.dates)}</h2>
+      <p class="lo" style="margin:0 0 12px">${esc(weekPlan.goal)}</p>`;
+    entries.forEach(e=>{
+      h+=`<div class="fclist-item">
+        <h4>${esc(e.t)} <span class="tagm">M${e.mod}</span></h4>
+        <p>${esc(e.d)}</p>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  $("#sumArea").innerHTML=h||`<p class="note">Nothing to show.</p>`;
 }
-function renderList(){
-  const sel=$("#fcModule").value;
-  const title=sel==="all"?"All weeks":"Week "+sel;
-  let h=`<div class="card"><p class="fclist-head">${title} — ${deck.length} flashcards</p>`;
-  if(!deck.length)h+=`<p class="note">No cards here (try turning off 'Review unknown only').</p>`;
-  deck.forEach(c=>{h+=`<div class="fclist-item"><h4>${esc(c.t)} <span class="tagm">· Week ${c.wk} · M${c.mod}${state.known[c.key]?" · known ✓":""}</span></h4><p>${esc(c.d)}</p></div>`;});
-  h+=`</div>`;
-  $("#fcList").innerHTML=h;
-}
-function showCard(){
-  const f=$("#flash");f.classList.remove("flip");
-  if(!deck.length){$("#fcFront").textContent="No cards here";$("#fcBack").textContent="";$("#fcTag").textContent="";$("#fcProgress").textContent="";return;}
-  if(fcIdx<0)fcIdx=deck.length-1;if(fcIdx>=deck.length)fcIdx=0;
-  const c=deck[fcIdx];
-  $("#fcTag").textContent="Week "+c.wk+" · M"+c.mod+(state.known[c.key]?" · known ✓":"");
-  $("#fcFront").textContent=c.t;$("#fcBack").textContent=c.d;
-  $("#fcProgress").textContent=`Card ${fcIdx+1} of ${deck.length}`;
-}
-function initFlash(){
-  const sel=$("#fcModule");sel.innerHTML='<option value="all">All weeks</option>'+[1,2,3,4,5].map(w=>`<option value="${w}">Week ${w}</option>`).join("");
-  sel.onchange=()=>{reviewMode=false;buildDeck()};
-  $("#flash").onclick=()=>$("#flash").classList.toggle("flip");
-  $("#fcNext").onclick=()=>{fcIdx++;showCard()};
-  $("#fcPrev").onclick=()=>{fcIdx--;showCard()};
-  $("#fcShuffle").onclick=()=>{for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}fcIdx=0;showCard()};
-  $("#fcReview").onclick=()=>{reviewMode=!reviewMode;$("#fcReview").classList.toggle("primary",reviewMode);buildDeck()};
-  $("#fcListBtn").onclick=()=>{
-    listMode=!listMode;
-    $("#fcListBtn").classList.toggle("primary",listMode);
-    $("#fcListBtn").textContent=listMode?"🗂 Card view":"📄 List all";
-    $("#fcList").classList.toggle("hidden",!listMode);
-    $("#flash").classList.toggle("hidden",listMode);
-    $(".fc-nav").classList.toggle("hidden",listMode);
-    $("#fcShuffle").classList.toggle("hidden",listMode);
-    if(listMode)renderList();
-  };
-  $("#fcGotIt").onclick=()=>{if(deck[fcIdx]){state.known[deck[fcIdx].key]=true;save(state);renderProgress();fcIdx++;showCard()}};
-  $("#fcNotYet").onclick=()=>{if(deck[fcIdx]){state.known[deck[fcIdx].key]=false;save(state);renderProgress();fcIdx++;showCard()}};
-  buildDeck();
+function initSummary(){
+  renderSummary();
+  $("#sumWeek").onchange=renderSummary;
 }
 
 /* ============ QUIZ ============ */
@@ -669,7 +627,7 @@ function renderQuiz(qs,sel){
 
 /* ============ INIT ============ */
 function renderAll(){renderProgress();renderPlan();}
-renderAll();initFlash();initQuiz();
+renderAll();initSummary();initQuiz();
 </script>
 </body>
 </html>
