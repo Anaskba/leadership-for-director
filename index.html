@@ -97,7 +97,7 @@ select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10
     </div>
     <div class="overall">
       <div class="bar"><i id="overallBar"></i></div>
-      <p class="sub" style="margin-top:6px"><span id="overallPct">0%</span> studied · <span id="overallCount">0/0</span> subsections</p>
+      <p class="sub" style="margin-top:6px"><span id="overallPct">0%</span> plan complete · <span id="overallCount">0/0</span> days</p>
     </div>
   </header>
 
@@ -433,36 +433,48 @@ function totalSubs(){return MODULES.reduce((n,m)=>n+m.subs.length,0)}
 function doneCount(){return Object.values(state.done).filter(Boolean).length}
 function modDone(m){return m.subs.filter(s=>state.done[m.num+"|"+s]).length}
 function renderProgress(){
-  const total=totalSubs(),done=doneCount(),pct=total?Math.round(done/total*100):0;
-  $("#overallBar").style.width=pct+"%";$("#overallPct").textContent=pct+"%";$("#overallCount").textContent=done+"/"+total;
+  const totalDays=PLAN.reduce((n,w)=>n+w.days.length,0);
+  const doneDays=PLAN.reduce((n,w)=>n+w.days.filter(d=>state.plan[d.id]).length,0);
+  const pct=totalDays?Math.round(doneDays/totalDays*100):0;
+  $("#overallBar").style.width=pct+"%";$("#overallPct").textContent=pct+"%";$("#overallCount").textContent=doneDays+"/"+totalDays;
   const fcTotal=MODULES.reduce((n,m)=>n+m.flash.length,0);
   const fcKnown=Object.values(state.known).filter(Boolean).length;
-  const bestAvg=(()=>{const v=[1,2,3,4,5].map(i=>state.best["w"+i]||0);return Math.round(v.reduce((a,b)=>a+b,0)/v.length)})();
+  const bestScores=[1,2,3,4,5].map(i=>state.best["w"+i]).filter(v=>v!=null);
+  const bestAvg=bestScores.length?Math.round(bestScores.reduce((a,b)=>a+b,0)/bestScores.length):null;
   let h=`<div class="card">
     <h2 class="modtitle" style="font-size:17px">Your progress</h2>
     <div class="kpi">
-      <div class="box"><b>${pct}%</b><span>${done}/${total} subsections studied</span></div>
+      <div class="box"><b>${pct}%</b><span>${doneDays}/${totalDays} study days complete</span></div>
       <div class="box"><b>${fcKnown}/${fcTotal}</b><span>flashcards marked 'got it'</span></div>
-      <div class="box"><b>${bestAvg}%</b><span>avg best quiz score</span></div>
+      <div class="box"><b>${bestAvg!=null?bestAvg+"%":"–"}</b><span>avg best quiz score</span></div>
     </div>
   </div>`;
-  h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Reading by module</h2>`;
-  MODULES.forEach(m=>{
-    const d=modDone(m),t=m.subs.length,p=Math.round(d/t*100);
+  h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Study plan by week</h2>`;
+  PLAN.forEach(w=>{
+    const wd=w.days.filter(d=>state.plan[d.id]).length,wt=w.days.length,wp=Math.round(wd/wt*100);
     h+=`<div style="margin:12px 0">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="mnum">M${m.num}</span><b style="font-size:14px">${esc(m.title)}</b>
-        <span class="miniprog">${d}/${t} subsections</span>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="mnum">Week ${w.wk}</span>
+        <b style="font-size:14px">${esc(w.dates)}</b>
+        <span class="miniprog">${wd}/${wt} days${wd===wt?' ✓':''}</span>
       </div>
-      <div class="bar" style="margin-top:6px"><i style="width:${p}%"></i></div>
+      <p class="lo" style="margin:3px 0 4px">${esc(w.goal)}</p>
+      <div class="bar"><i style="width:${wp}%"></i></div>
     </div>`;
   });
   h+=`</div>`;
-  h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Quiz best by week</h2><div class="kpi">`;
+  h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Flashcards by module</h2><div class="kpi">`;
+  MODULES.forEach(m=>{
+    const total=m.flash.length;
+    const known=m.flash.filter((f,i)=>state.known[m.num+"#"+i]).length;
+    h+=`<div class="box"><b>${known}/${total}</b><span>M${m.num} · ${esc(m.title)}</span></div>`;
+  });
+  h+=`</div></div>`;
+  h+=`<div class="card"><h2 class="modtitle" style="font-size:16px;margin-bottom:6px">Quiz best score by week</h2><div class="kpi">`;
   [1,2,3,4,5].forEach(i=>{const b=state.best["w"+i];h+=`<div class="box"><b>${b!=null?b+"%":"–"}</b><span>Week ${i}</span></div>`;});
   h+=`</div><p style="margin-top:14px"><button class="reset" id="resetAll">Reset all progress</button></p></div>`;
   $("#tab-progress").innerHTML=h;
-  $("#resetAll").onclick=()=>{if(confirm("Reset all progress, notes, flashcard status and quiz scores?")){try{localStorage.removeItem(LS)}catch(e){}memStore=null;state={done:{},notes:{},known:{},best:{},plan:{}};save(state);renderAll();}};
+  $("#resetAll").onclick=()=>{if(confirm("Reset all progress, flashcard status and quiz scores?")){try{localStorage.removeItem(LS)}catch(e){}memStore=null;state={done:{},notes:{},known:{},best:{},plan:{}};save(state);renderAll();}};
 }
 
 /* ============ STUDY PLAN ============ */
