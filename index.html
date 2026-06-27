@@ -512,7 +512,7 @@ function renderPlan(){
   $$('#tab-plan input[type=checkbox]').forEach(cb=>cb.onchange=()=>{
     state.plan[cb.dataset.pid]=cb.checked;save(state);
     cb.closest(".planrow").classList.toggle("done",cb.checked);
-    renderPlan();
+    renderPlan();renderProgress();
   });
 }
 
