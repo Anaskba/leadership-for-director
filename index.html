@@ -98,6 +98,7 @@ select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10
     <div class="overall">
       <div class="bar"><i id="overallBar"></i></div>
       <p class="sub" style="margin-top:6px"><span id="overallPct">0%</span> plan complete · <span id="overallCount">0/0</span> days</p>
+      <p class="sub" style="margin-top:4px;font-size:12px"><span id="syncStatus">☁ connecting…</span></p>
     </div>
   </header>
 
@@ -322,24 +323,99 @@ const MODULES = [
 }
 ];
 
-/* ============ STATE (localStorage) ============ */
+/* ============ STATE (localStorage + cloud sync via jsonblob.com) ============ */
 const LS="lfd_study_v1";
-let memStore=null; // in-memory fallback if localStorage is blocked (sandboxed frame)
+const BLOB_API="https://jsonblob.com/api/jsonBlob";
+let memStore=null;
+
+/* Cloud ID lives in the URL hash (#<id>) and also localStorage as fallback */
+function getCloudId(){
+  const h=location.hash.replace("#","").trim();
+  return h.length>10?h:null;
+}
+function setCloudId(id){
+  history.replaceState(null,"","#"+id);
+  try{localStorage.setItem("lfd_cloud_id",id)}catch(e){}
+}
+function resolveCloudId(){
+  return getCloudId()||(()=>{try{return localStorage.getItem("lfd_cloud_id")||null}catch(e){return null}})();
+}
+
 function load(){
   try{return JSON.parse(localStorage.getItem(LS))||{}}
   catch(e){return memStore||{}}
 }
-function save(s){
+function saveLocal(s){
   memStore=s;
-  try{localStorage.setItem(LS,JSON.stringify(s))}catch(e){/* storage blocked — keep in memory */}
+  try{localStorage.setItem(LS,JSON.stringify(s))}catch(e){}
 }
+function save(s){
+  saveLocal(s);
+  cloudSaveDebounced(s);
+}
+
+let _cst=null;
+function cloudSaveDebounced(s){
+  clearTimeout(_cst);
+  _cst=setTimeout(()=>cloudSave(s),900);
+}
+async function cloudSave(s){
+  const id=resolveCloudId();
+  if(!id)return;
+  setSyncStatus("saving");
+  try{
+    const r=await fetch(`${BLOB_API}/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(s)});
+    setSyncStatus(r.ok?"ok":"err");
+  }catch(e){setSyncStatus("err");}
+}
+async function cloudLoad(id){
+  try{
+    const r=await fetch(`${BLOB_API}/${id}`,{headers:{"Accept":"application/json"}});
+    if(!r.ok)return null;
+    return await r.json();
+  }catch(e){return null;}
+}
+async function cloudCreate(s){
+  try{
+    const r=await fetch(BLOB_API,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(s)});
+    if(!r.ok)return null;
+    /* jsonblob returns the new URL in the Location header */
+    const loc=r.headers.get("Location")||"";
+    return loc.split("/").pop()||null;
+  }catch(e){return null;}
+}
+function setSyncStatus(st){
+  const el=document.getElementById("syncStatus");if(!el)return;
+  const map={saving:["☁ saving…","var(--muted)"],ok:["☁ synced","var(--accent)"],err:["⚠ offline","var(--warn)"],new:["☁ new profile created","var(--accent)"]};
+  const [txt,col]=map[st]||["",""];
+  el.textContent=txt;el.style.color=col;
+}
+
 let state=load();
-state.done=state.done||{};      // subsection key -> true
-state.notes=state.notes||{};    // module num -> text
-state.known=state.known||{};    // flashcard key -> true
-state.best=state.best||{};      // module num -> best %
-state.plan=state.plan||{};      // plan day id -> true
-save(state);
+state.done=state.done||{};
+state.notes=state.notes||{};
+state.known=state.known||{};
+state.best=state.best||{};
+state.plan=state.plan||{};
+saveLocal(state);
+
+/* Boot: load from cloud if ID present, else create a new profile */
+async function cloudBoot(){
+  setSyncStatus("saving");
+  let id=resolveCloudId();
+  if(id){
+    const remote=await cloudLoad(id);
+    if(remote){
+      state=Object.assign({done:{},notes:{},known:{},best:{},plan:{}},remote);
+      saveLocal(state);setSyncStatus("ok");renderAll();return;
+    }
+  }
+  /* No valid cloud ID — create a new blob */
+  id=await cloudCreate(state);
+  if(id){setCloudId(id);setSyncStatus("new");}
+  else setSyncStatus("err");
+}
+cloudBoot();
 
 /* ============ STUDY PLAN (Sun–Sat, Jun 28 – Aug 1; exam 12 Aug) ============ */
 const PLAN=[
