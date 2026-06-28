@@ -98,7 +98,8 @@ select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10
     <div class="overall">
       <div class="bar"><i id="overallBar"></i></div>
       <p class="sub" style="margin-top:6px"><span id="overallPct">0%</span> plan complete · <span id="overallCount">0/0</span> days</p>
-      <p class="sub" style="margin-top:4px;font-size:12px"><a id="shareLink" href="#" onclick="navigator.clipboard.writeText(location.href);this.textContent='✓ copied!';setTimeout(()=>this.textContent='⇪ Copy link to use on any device',1500);return false;" style="color:var(--brand);text-decoration:none;font-weight:600">⇪ Copy link to use on any device</a></p>
+      <p class="sub" style="margin-top:4px;font-size:12px"><span id="syncBadge"></span></p>
+      <p class="sub" style="font-size:11px;color:var(--muted);margin-top:2px"><span id="syncIdBox"></span></p>
     </div>
   </header>
 
@@ -323,53 +324,98 @@ const MODULES = [
 }
 ];
 
-/* ============ STATE ============ */
-/* State is encoded as base64 in the URL hash — bookmark the URL to carry
-   progress across devices. localStorage is kept as a same-device cache. */
+/* ============ STATE (online sync via jsonblob.com — no account needed) ============ */
 const LS="lfd_study_v1";
+const BLOB="https://jsonblob.com/api/jsonBlob";
+const ID_KEY="lfd_blob_id";
 let memStore=null;
 
-function encodeState(s){
-  try{return btoa(unescape(encodeURIComponent(JSON.stringify(s))))}catch(e){return null;}
-}
-function decodeState(str){
-  try{return JSON.parse(decodeURIComponent(escape(atob(str))))}catch(e){return null;}
-}
-function stateFromHash(){
-  const h=location.hash.replace(/^#/,"").trim();
-  if(h.length<10)return null;
-  return decodeState(h);
-}
-function pushStateToHash(s){
-  const enc=encodeState(s);
-  if(enc)history.replaceState(null,"","#"+enc);
-}
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 
-function load(){
-  const fromHash=stateFromHash();
-  if(fromHash)return fromHash;
+function loadLocal(){
   try{return JSON.parse(localStorage.getItem(LS))||{}}
   catch(e){return memStore||{}}
 }
-function save(s){
+function saveLocal(s){
   memStore=s;
   try{localStorage.setItem(LS,JSON.stringify(s))}catch(e){}
-  pushStateToHash(s);
-  updateShareLink();
 }
 
-function updateShareLink(){
-  const el=document.getElementById("shareLink");
-  if(el)el.href=location.href;
+let _saveTimer=null;
+function save(s){
+  saveLocal(s);
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>onlineSave(s),800);
 }
 
-let state=load();
+async function onlineSave(s){
+  const id=lsGet(ID_KEY);
+  if(!id)return;
+  setSyncBadge("saving");
+  try{
+    const r=await fetch(`${BLOB}/${id}`,{method:"PUT",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify(s)});
+    setSyncBadge(r.ok?"ok":"err");
+  }catch(e){setSyncBadge("err");}
+}
+
+async function onlineLoad(id){
+  try{
+    const r=await fetch(`${BLOB}/${id}`,{headers:{"Accept":"application/json"}});
+    if(!r.ok)return null;
+    return await r.json();
+  }catch(e){return null;}
+}
+
+async function onlineCreate(s){
+  try{
+    const r=await fetch(BLOB,{method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify(s)});
+    if(!r.ok)return null;
+    const loc=r.headers.get("Location")||"";
+    return loc.split("/").pop()||null;
+  }catch(e){return null;}
+}
+
+function setSyncBadge(st){
+  const el=document.getElementById("syncBadge");if(!el)return;
+  const map={connecting:["⟳ connecting…","var(--muted)"],saving:["⟳ saving…","var(--muted)"],ok:["✓ synced","var(--accent)"],err:["⚠ offline — changes saved locally","var(--warn)"]};
+  const [txt,col]=map[st]||["",""];
+  el.textContent=txt;el.style.color=col;
+}
+
+function showSyncId(id){
+  const el=document.getElementById("syncIdBox");
+  if(el)el.textContent="Your sync ID: "+id;
+}
+
+let state=loadLocal();
 state.done=state.done||{};
 state.notes=state.notes||{};
 state.known=state.known||{};
 state.best=state.best||{};
 state.plan=state.plan||{};
-save(state);
+saveLocal(state);
+
+/* ---- boot: connect or create online profile ---- */
+(async()=>{
+  setSyncBadge("connecting");
+  let id=lsGet(ID_KEY);
+  if(id){
+    const remote=await onlineLoad(id);
+    if(remote){
+      state=Object.assign({done:{},notes:{},known:{},best:{},plan:{}},remote);
+      saveLocal(state);renderAll();setSyncBadge("ok");showSyncId(id);return;
+    }
+  }
+  // no existing profile — create one
+  id=await onlineCreate(state);
+  if(id){lsSet(ID_KEY,id);setSyncBadge("ok");showSyncId(id);}
+  else setSyncBadge("err");
+})();
 
 /* ============ STUDY PLAN (Sun–Sat, Jun 28 – Aug 1; exam 12 Aug) ============ */
 const PLAN=[
