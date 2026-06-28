@@ -99,12 +99,6 @@ select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10
       <div class="bar"><i id="overallBar"></i></div>
       <p class="sub" style="margin-top:6px"><span id="overallPct">0%</span> plan complete · <span id="overallCount">0/0</span> days</p>
       <p class="sub" style="margin-top:4px;font-size:12px"><span id="syncBadge"></span></p>
-      <p class="sub" style="font-size:11px;color:var(--muted);margin-top:2px"><span id="syncIdBox"></span></p>
-      <div id="syncConnect" style="margin-top:6px;display:none">
-        <input id="syncIdInput" placeholder="Paste your sync ID here" style="font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;width:100%;font-family:monospace">
-        <button onclick="connectSyncId()" style="margin-top:4px;font-size:12px;padding:4px 10px;border:1px solid var(--brand);background:var(--brand);color:#fff;border-radius:8px;cursor:pointer;width:100%">Connect</button>
-      </div>
-      <p style="font-size:11px;margin-top:4px"><button id="syncToggleBtn" onclick="toggleSyncInput()" style="background:none;border:none;color:var(--brand);cursor:pointer;font-size:11px;padding:0;text-decoration:underline">Use on a new device?</button></p>
     </div>
   </header>
 
@@ -329,10 +323,8 @@ const MODULES = [
 }
 ];
 
-/* ============ STATE (online sync via jsonblob.com — no account needed) ============ */
+/* ============ STATE (online sync via /api/progress) ============ */
 const LS="lfd_study_v1";
-const BLOB="https://api.npoint.io";
-const ID_KEY="lfd_blob_id";
 let memStore=null;
 
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -355,33 +347,21 @@ function save(s){
 }
 
 async function onlineSave(s){
-  const id=lsGet(ID_KEY);
-  if(!id)return;
   setSyncBadge("saving");
   try{
-    const r=await fetch(`${BLOB}/${id}`,{method:"POST",
+    const r=await fetch("/api/progress",{method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify(s)});
     setSyncBadge(r.ok?"ok":"err");
   }catch(e){setSyncBadge("err");}
 }
 
-async function onlineLoad(id){
+async function onlineLoad(){
   try{
-    const r=await fetch(`${BLOB}/${id}`);
-    if(!r.ok)return null;
-    return await r.json();
-  }catch(e){return null;}
-}
-
-async function onlineCreate(s){
-  try{
-    const r=await fetch(BLOB,{method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(s)});
+    const r=await fetch("/api/progress");
     if(!r.ok)return null;
     const j=await r.json();
-    return j.id||null;
+    return Object.keys(j).length?j:null;
   }catch(e){return null;}
 }
 
@@ -392,33 +372,6 @@ function setSyncBadge(st){
   el.textContent=txt;el.style.color=col;
 }
 
-function showSyncId(id){
-  const el=document.getElementById("syncIdBox");
-  if(el){el.textContent="Sync ID: "+id;el.style.cursor="pointer";el.title="Click to copy";el.onclick=()=>{navigator.clipboard.writeText(id);el.textContent="✓ copied!";setTimeout(()=>{el.textContent="Sync ID: "+id},1500);};}
-}
-function toggleSyncInput(){
-  const box=document.getElementById("syncConnect");
-  const btn=document.getElementById("syncToggleBtn");
-  const shown=box.style.display!=="none";
-  box.style.display=shown?"none":"block";
-  btn.textContent=shown?"Use on a new device?":"Cancel";
-}
-async function connectSyncId(){
-  const id=document.getElementById("syncIdInput").value.trim();
-  if(!id){return;}
-  setSyncBadge("connecting");
-  const remote=await onlineLoad(id);
-  if(remote){
-    lsSet(ID_KEY,id);
-    state=Object.assign({done:{},notes:{},known:{},best:{},plan:{}},remote);
-    saveLocal(state);renderAll();setSyncBadge("ok");showSyncId(id);
-    toggleSyncInput();
-  } else {
-    setSyncBadge("err");
-    document.getElementById("syncIdInput").style.borderColor="var(--bad)";
-  }
-}
-
 let state=loadLocal();
 state.done=state.done||{};
 state.notes=state.notes||{};
@@ -427,21 +380,15 @@ state.best=state.best||{};
 state.plan=state.plan||{};
 saveLocal(state);
 
-/* ---- boot: connect or create online profile ---- */
+/* ---- boot: load from online store ---- */
 (async()=>{
   setSyncBadge("connecting");
-  let id=lsGet(ID_KEY);
-  if(id){
-    const remote=await onlineLoad(id);
-    if(remote){
-      state=Object.assign({done:{},notes:{},known:{},best:{},plan:{}},remote);
-      saveLocal(state);renderAll();setSyncBadge("ok");showSyncId(id);return;
-    }
+  const remote=await onlineLoad();
+  if(remote){
+    state=Object.assign({done:{},notes:{},known:{},best:{},plan:{}},remote);
+    saveLocal(state);renderAll();
   }
-  // no existing profile — create one
-  id=await onlineCreate(state);
-  if(id){lsSet(ID_KEY,id);setSyncBadge("ok");showSyncId(id);}
-  else setSyncBadge("err");
+  setSyncBadge("ok");
 })();
 
 /* ============ STUDY PLAN (Sun–Sat, Jun 28 – Aug 1; exam 12 Aug) ============ */
