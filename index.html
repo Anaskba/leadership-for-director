@@ -98,7 +98,7 @@ select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10
     <div class="overall">
       <div class="bar"><i id="overallBar"></i></div>
       <p class="sub" style="margin-top:6px"><span id="overallPct">0%</span> plan complete · <span id="overallCount">0/0</span> days</p>
-      <p class="sub" style="margin-top:4px;font-size:12px"><span id="syncStatus">☁ connecting…</span></p>
+      <p class="sub" style="margin-top:4px;font-size:12px"><a id="shareLink" href="#" onclick="navigator.clipboard.writeText(location.href);this.textContent='✓ copied!';setTimeout(()=>this.textContent='⇪ Copy link to use on any device',1500);return false;" style="color:var(--brand);text-decoration:none;font-weight:600">⇪ Copy link to use on any device</a></p>
     </div>
   </header>
 
@@ -323,72 +323,44 @@ const MODULES = [
 }
 ];
 
-/* ============ STATE (localStorage + cloud sync via jsonblob.com) ============ */
+/* ============ STATE ============ */
+/* State is encoded as base64 in the URL hash — bookmark the URL to carry
+   progress across devices. localStorage is kept as a same-device cache. */
 const LS="lfd_study_v1";
-const BLOB_API="https://jsonblob.com/api/jsonBlob";
 let memStore=null;
 
-/* Cloud ID lives in the URL hash (#<id>) and also localStorage as fallback */
-function getCloudId(){
-  const h=location.hash.replace("#","").trim();
-  return h.length>10?h:null;
+function encodeState(s){
+  try{return btoa(unescape(encodeURIComponent(JSON.stringify(s))))}catch(e){return null;}
 }
-function setCloudId(id){
-  history.replaceState(null,"","#"+id);
-  try{localStorage.setItem("lfd_cloud_id",id)}catch(e){}
+function decodeState(str){
+  try{return JSON.parse(decodeURIComponent(escape(atob(str))))}catch(e){return null;}
 }
-function resolveCloudId(){
-  return getCloudId()||(()=>{try{return localStorage.getItem("lfd_cloud_id")||null}catch(e){return null}})();
+function stateFromHash(){
+  const h=location.hash.replace(/^#/,"").trim();
+  if(h.length<10)return null;
+  return decodeState(h);
+}
+function pushStateToHash(s){
+  const enc=encodeState(s);
+  if(enc)history.replaceState(null,"","#"+enc);
 }
 
 function load(){
+  const fromHash=stateFromHash();
+  if(fromHash)return fromHash;
   try{return JSON.parse(localStorage.getItem(LS))||{}}
   catch(e){return memStore||{}}
 }
-function saveLocal(s){
+function save(s){
   memStore=s;
   try{localStorage.setItem(LS,JSON.stringify(s))}catch(e){}
-}
-function save(s){
-  saveLocal(s);
-  cloudSaveDebounced(s);
+  pushStateToHash(s);
+  updateShareLink();
 }
 
-let _cst=null;
-function cloudSaveDebounced(s){
-  clearTimeout(_cst);
-  _cst=setTimeout(()=>cloudSave(s),900);
-}
-async function cloudSave(s){
-  const id=resolveCloudId();
-  if(!id)return;
-  setSyncStatus("saving");
-  try{
-    const r=await fetch(`${BLOB_API}/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(s)});
-    setSyncStatus(r.ok?"ok":"err");
-  }catch(e){setSyncStatus("err");}
-}
-async function cloudLoad(id){
-  try{
-    const r=await fetch(`${BLOB_API}/${id}`,{headers:{"Accept":"application/json"}});
-    if(!r.ok)return null;
-    return await r.json();
-  }catch(e){return null;}
-}
-async function cloudCreate(s){
-  try{
-    const r=await fetch(BLOB_API,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(s)});
-    if(!r.ok)return null;
-    /* jsonblob returns the new URL in the Location header */
-    const loc=r.headers.get("Location")||"";
-    return loc.split("/").pop()||null;
-  }catch(e){return null;}
-}
-function setSyncStatus(st){
-  const el=document.getElementById("syncStatus");if(!el)return;
-  const map={saving:["☁ saving…","var(--muted)"],ok:["☁ synced","var(--accent)"],err:["⚠ offline","var(--warn)"],new:["☁ new profile created","var(--accent)"]};
-  const [txt,col]=map[st]||["",""];
-  el.textContent=txt;el.style.color=col;
+function updateShareLink(){
+  const el=document.getElementById("shareLink");
+  if(el)el.href=location.href;
 }
 
 let state=load();
@@ -397,25 +369,7 @@ state.notes=state.notes||{};
 state.known=state.known||{};
 state.best=state.best||{};
 state.plan=state.plan||{};
-saveLocal(state);
-
-/* Boot: load from cloud if ID present, else create a new profile */
-async function cloudBoot(){
-  setSyncStatus("saving");
-  let id=resolveCloudId();
-  if(id){
-    const remote=await cloudLoad(id);
-    if(remote){
-      state=Object.assign({done:{},notes:{},known:{},best:{},plan:{}},remote);
-      saveLocal(state);setSyncStatus("ok");renderAll();return;
-    }
-  }
-  /* No valid cloud ID — create a new blob */
-  id=await cloudCreate(state);
-  if(id){setCloudId(id);setSyncStatus("new");}
-  else setSyncStatus("err");
-}
-cloudBoot();
+save(state);
 
 /* ============ STUDY PLAN (Sun–Sat, Jun 28 – Aug 1; exam 12 Aug) ============ */
 const PLAN=[
