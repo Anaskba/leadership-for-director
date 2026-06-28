@@ -331,7 +331,7 @@ const MODULES = [
 
 /* ============ STATE (online sync via jsonblob.com — no account needed) ============ */
 const LS="lfd_study_v1";
-const BLOB="https://jsonblob.com/api/jsonBlob";
+const BLOB="https://api.npoint.io";
 const ID_KEY="lfd_blob_id";
 let memStore=null;
 
@@ -359,8 +359,8 @@ async function onlineSave(s){
   if(!id)return;
   setSyncBadge("saving");
   try{
-    const r=await fetch(`${BLOB}/${id}`,{method:"PUT",
-      headers:{"Content-Type":"application/json","Accept":"application/json"},
+    const r=await fetch(`${BLOB}/${id}`,{method:"POST",
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify(s)});
     setSyncBadge(r.ok?"ok":"err");
   }catch(e){setSyncBadge("err");}
@@ -368,7 +368,7 @@ async function onlineSave(s){
 
 async function onlineLoad(id){
   try{
-    const r=await fetch(`${BLOB}/${id}`,{headers:{"Accept":"application/json"}});
+    const r=await fetch(`${BLOB}/${id}`);
     if(!r.ok)return null;
     return await r.json();
   }catch(e){return null;}
@@ -377,11 +377,11 @@ async function onlineLoad(id){
 async function onlineCreate(s){
   try{
     const r=await fetch(BLOB,{method:"POST",
-      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify(s)});
     if(!r.ok)return null;
-    const loc=r.headers.get("Location")||"";
-    return loc.split("/").pop()||null;
+    const j=await r.json();
+    return j.id||null;
   }catch(e){return null;}
 }
 
