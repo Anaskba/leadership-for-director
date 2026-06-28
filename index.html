@@ -100,6 +100,11 @@ select,.btn{border:1px solid var(--line);background:var(--card);border-radius:10
       <p class="sub" style="margin-top:6px"><span id="overallPct">0%</span> plan complete · <span id="overallCount">0/0</span> days</p>
       <p class="sub" style="margin-top:4px;font-size:12px"><span id="syncBadge"></span></p>
       <p class="sub" style="font-size:11px;color:var(--muted);margin-top:2px"><span id="syncIdBox"></span></p>
+      <div id="syncConnect" style="margin-top:6px;display:none">
+        <input id="syncIdInput" placeholder="Paste your sync ID here" style="font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;width:100%;font-family:monospace">
+        <button onclick="connectSyncId()" style="margin-top:4px;font-size:12px;padding:4px 10px;border:1px solid var(--brand);background:var(--brand);color:#fff;border-radius:8px;cursor:pointer;width:100%">Connect</button>
+      </div>
+      <p style="font-size:11px;margin-top:4px"><button id="syncToggleBtn" onclick="toggleSyncInput()" style="background:none;border:none;color:var(--brand);cursor:pointer;font-size:11px;padding:0;text-decoration:underline">Use on a new device?</button></p>
     </div>
   </header>
 
@@ -389,7 +394,29 @@ function setSyncBadge(st){
 
 function showSyncId(id){
   const el=document.getElementById("syncIdBox");
-  if(el)el.textContent="Your sync ID: "+id;
+  if(el){el.textContent="Sync ID: "+id;el.style.cursor="pointer";el.title="Click to copy";el.onclick=()=>{navigator.clipboard.writeText(id);el.textContent="✓ copied!";setTimeout(()=>{el.textContent="Sync ID: "+id},1500);};}
+}
+function toggleSyncInput(){
+  const box=document.getElementById("syncConnect");
+  const btn=document.getElementById("syncToggleBtn");
+  const shown=box.style.display!=="none";
+  box.style.display=shown?"none":"block";
+  btn.textContent=shown?"Use on a new device?":"Cancel";
+}
+async function connectSyncId(){
+  const id=document.getElementById("syncIdInput").value.trim();
+  if(!id){return;}
+  setSyncBadge("connecting");
+  const remote=await onlineLoad(id);
+  if(remote){
+    lsSet(ID_KEY,id);
+    state=Object.assign({done:{},notes:{},known:{},best:{},plan:{}},remote);
+    saveLocal(state);renderAll();setSyncBadge("ok");showSyncId(id);
+    toggleSyncInput();
+  } else {
+    setSyncBadge("err");
+    document.getElementById("syncIdInput").style.borderColor="var(--bad)";
+  }
 }
 
 let state=loadLocal();
