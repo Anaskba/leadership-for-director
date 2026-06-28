@@ -380,13 +380,17 @@ state.best=state.best||{};
 state.plan=state.plan||{};
 saveLocal(state);
 
-/* ---- boot: load from online store ---- */
+/* ---- boot: sync with online store ---- */
 (async()=>{
   setSyncBadge("connecting");
   const remote=await onlineLoad();
   if(remote){
+    /* server has data — use it (most up-to-date) */
     state=Object.assign({done:{},notes:{},known:{},best:{},plan:{}},remote);
     saveLocal(state);renderAll();
+  } else {
+    /* server is empty — push whatever is in localStorage */
+    await onlineSave(state);
   }
   setSyncBadge("ok");
 })();
